@@ -1,6 +1,5 @@
 ﻿using DataAccess.ApplicationConstants;
-using DataAccess.Interfaces;
-using DataAccess.Models;
+using DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.FileRepository
 {
-    internal sealed class FileAccountsRepository : FileRepositoryBase, IAccountRepository<AccountDetails>
+    public sealed class FileAccountsRepository : FileRepositoryBase, IRepository<AccountDetails>
     {
         public FileAccountsRepository() : base(FilePaths.AccountsFilePath) { }
 
@@ -26,15 +25,15 @@ namespace DataAccess.FileRepository
         public async Task<AccountDetails?> GetDataByUsernameAsync(string username)
         {
             var accountRecords = await GetAllDataAsync();
-            return accountRecords.FirstOrDefault(record => record.Username == username);
+            return accountRecords.FirstOrDefault(record => record.Username.Equals(username));
         }
 
         public async Task AddDataAsync(AccountDetails account)
         {
             var existingAccount = await GetDataByUsernameAsync(account.Username);
-            if (existingAccount != null)
+            if (existingAccount is not null)
             {
-                throw new InvalidOperationException($"Account for '{account.Username}' already exists");
+                throw new InvalidOperationException(string.Format(ExceptionConstants.AccountAlreadyExists, account.Username));
             }
 
             var accountRecords = await GetAllDataAsync();
@@ -46,7 +45,7 @@ namespace DataAccess.FileRepository
         {
             var accountRecords = await GetAllDataAsync();
             var remainingAccounts = accountRecords
-                .Where(record => record.Username != username)
+                .Where(record => !record.Username.Equals(username))
                 .ToList();
             await SaveAllDataAsync(remainingAccounts);
         }
@@ -57,7 +56,7 @@ namespace DataAccess.FileRepository
             var updatedAccounts = accountRecords
                 .Select(record =>
                 {
-                    if (record.Username == account.Username)
+                    if (record.Username.Equals(account.Username))
                     {
                         return account; 
                     }
@@ -77,9 +76,9 @@ namespace DataAccess.FileRepository
         public async Task UpdateBalanceAsync(string username, double newBalance)
         {
             var account = await GetDataByUsernameAsync(username);
-            if (account == null)
+            if (account is null)
             {
-                throw new InvalidOperationException($"No account found for '{username}'");
+                throw new InvalidOperationException(string.Format(ExceptionConstants.AccountNotFound, username));
             }
 
             account.Balance = newBalance;
@@ -91,7 +90,7 @@ namespace DataAccess.FileRepository
             var values = record.Split(',');
             if (values.Length != 2)
             {
-                throw new FormatException("Invalid account details format. Expected 2 fields.");
+                throw new FormatException(ExceptionConstants.InvalidAccountDetailsFormat);
             }
 
             return new AccountDetails

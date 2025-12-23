@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Models
+namespace DataAccess.Entities
 {
-    internal sealed class TransactionDetails
+    public sealed class TransactionDetails
     {
         public string UserName { get; set; }
         public TransactionType Type { get; set; }

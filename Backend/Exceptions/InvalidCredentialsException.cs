@@ -8,6 +8,6 @@ namespace Backend.Exceptions
 {
     public class InvalidCredentialsException : ServiceException
     {
-        public InvalidCredentialsException() : base("Invalid username or PIN.") { }
+        public InvalidCredentialsException() : base(ExceptionMessages.InvalidCredentials) { }
     }
 }

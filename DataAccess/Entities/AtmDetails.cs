@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Models
+namespace DataAccess.Entities
 {
-    internal sealed class AtmDetails
+    public sealed class AtmDetails
     {
+        public string AdminUsername { get; set; }  
         public double TotalBalance { get; set; }
     }
 }

@@ -8,6 +8,6 @@ namespace Backend.Exceptions
 {
     public class UsernameTakenException : ServiceException
     {
-        public UsernameTakenException() : base("Username already exists.") { }
+        public UsernameTakenException() : base(ExceptionMessages.UsernameTaken) { }
     }
 }

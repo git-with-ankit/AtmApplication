@@ -1,4 +1,4 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace Backend.DTOs
     {
         public string Username { get; set; } = string.Empty;
         public UserRole Role { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsLoginSuccessful { get; set; }
         public bool IsFrozen { get; set; }
     }
 }

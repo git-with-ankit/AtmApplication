@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccess.ApplicationConstants;
-using DataAccess.Models;
+using DataAccess.Entities;
 
 namespace DataAccess.FileRepository
 {
-    internal abstract class FileRepositoryBase
+    public abstract class FileRepositoryBase
     {
         private string _filePath;
 
@@ -29,7 +29,7 @@ namespace DataAccess.FileRepository
             {
                 if(filePath == FilePaths.UsersFilePath)
                 {
-                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},{UserRole.Admin},False";
+                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},{UserRole.Admin},False,True";
                     File.WriteAllText(filePath, adminLine);
                 }
                 else

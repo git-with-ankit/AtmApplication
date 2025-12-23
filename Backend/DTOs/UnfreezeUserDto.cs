@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.DTOs.Admin
+namespace Backend.DTOs
 {
     public sealed class UnfreezeUserDto
     {
-        public string Username { get; set; }
+        public string AdminUsername { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
     }
 }

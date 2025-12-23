@@ -8,6 +8,6 @@ namespace Backend.Exceptions
 {
     public class AccountFrozenException : ServiceException
     {
-        public AccountFrozenException() : base("Account is frozen due to multiple failed attempts.") { }
+        public AccountFrozenException() : base(ExceptionMessages.AccountFrozen) { }
     }
 }

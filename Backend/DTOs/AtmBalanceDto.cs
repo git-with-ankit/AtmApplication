@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.DTOs.Admin
+namespace Backend.DTOs
 {
     public sealed class AtmBalanceDto
     {
-        public decimal TotalBalance { get; set; }
+        public double TotalBalance { get; set; }
     }
 }

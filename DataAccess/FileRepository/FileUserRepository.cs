@@ -1,15 +1,14 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccess.ApplicationConstants;
-using DataAccess.Interfaces;
 
 namespace DataAccess.FileRepository
 {
-    internal sealed class FileUserRepository : FileRepositoryBase, IUserRepository<UserDetails>
+    public sealed class FileUserRepository : FileRepositoryBase, IRepository<UserDetails>
     {
         public FileUserRepository() : base(FilePaths.UsersFilePath) { }
 
@@ -25,15 +24,15 @@ namespace DataAccess.FileRepository
         public async Task<UserDetails?> GetDataByUsernameAsync(string username)
         {
             var userRecords = await GetAllDataAsync();
-            return userRecords.FirstOrDefault(record => record.Username  == username);
+            return userRecords.FirstOrDefault(record => record.Username.Equals(username));
         }
 
         public async Task AddDataAsync(UserDetails user)
         {
             var existingUser = await GetDataByUsernameAsync(user.Username);
-            if (existingUser != null) 
+            if (existingUser is not null) 
             {
-                throw new InvalidOperationException($"User '{user.Username}' already exists");
+                throw new InvalidOperationException(string.Format(ExceptionConstants.UserAlreadyExists, user.Username));
             }
             var userRecords = await GetAllDataAsync();
             userRecords.Add(user);
@@ -44,18 +43,17 @@ namespace DataAccess.FileRepository
         {
             var userRecords = await GetAllDataAsync();
             var remainingUsers = userRecords
-                                    .Where(record => record.Username != username)
+                                    .Where(record => !record.Username.Equals(username))
                                     .ToList();
             await SaveAllDataAsync(remainingUsers);
         }
-        //If not of use then remove IDeletable
         public async Task UpdateDataAsync(UserDetails user)
         {
             var userRecords = await GetAllDataAsync();
             var updatedUsers = userRecords
                                     .Select(record =>
                                     {
-                                        if (record.Username == user.Username)
+                                        if (record.Username.Equals(user.Username))
                                         {
                                             return user; 
                                         }
@@ -71,7 +69,7 @@ namespace DataAccess.FileRepository
             var values = record.Split(',');
             if(values.Length != 4)
             {
-                throw new FormatException("Invalid user details format.");
+                throw new FormatException(ExceptionConstants.InvalidUserDetailsFormat);
             }
             return new UserDetails()
             {

@@ -8,6 +8,6 @@ namespace Backend.Exceptions
 {
     public class InsufficientFundsException : ServiceException
     {
-        public InsufficientFundsException() : base("Insufficient funds in account or ATM.") { }
+        public InsufficientFundsException() : base(ExceptionMessages.InsufficientFunds) { }
     }
 }

@@ -1,5 +1,4 @@
-﻿using DataAccess.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace Backend.DTOs
 {
-    public sealed class TransactionDto
+    public sealed class DepositCashDto
     {
-        public string Username { get; set; }
-        public TransactionType Type { get; set; }
+        public string AdminUsername { get; set; } = string.Empty;
         public double Amount { get; set; }
     }
 }

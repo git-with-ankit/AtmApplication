@@ -1,4 +1,4 @@
-﻿using DataAccess.Models;
+﻿using DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +15,8 @@ namespace Backend.DTOs
     public sealed class TransactionHistoryItemDto
     {
         public TransactionType Type { get; set; }
-        public decimal Amount { get; set; }
-        public decimal NewBalance { get; set; }
+        public double Amount { get; set; }
+        public double NewBalance { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

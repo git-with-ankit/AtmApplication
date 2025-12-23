@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.Interfaces
+namespace DataAccess.Entities
 {
-    public interface IReadRepository<T> where T : class
+    public enum TransactionType
     {
-        Task<List<T>> GetAllDataAsync();
+        Credit,
+        Debit
     }
 }

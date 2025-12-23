@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.DTOs.Admin
+namespace DataAccess.Entities
 {
-    public sealed class DepositCashDto
+    public enum UserRole
     {
-        public decimal Amount { get; set; }
+        Admin,
+        User
     }
 }
