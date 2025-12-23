@@ -27,9 +27,12 @@ namespace Frontend.Dependencies
             AtmRepository = new FileAtmRepository();
             TransactionRepository = new FileTransactionRepository();
 
-            // Initialize services
-            IdentityService = new IdentityService(UserRepository, AccountRepository);
-            TransactionService = new TransactionService(UserRepository, AccountRepository, AtmRepository, TransactionRepository);
+            // Initialize ValidationService
+            var validationService = new ValidationService(UserRepository, AccountRepository);
+
+            // Initialize services with ValidationService
+            IdentityService = new IdentityService(validationService, UserRepository, AccountRepository);
+            TransactionService = new TransactionService(validationService, AccountRepository, AtmRepository, TransactionRepository);
 
             // Initialize UI components
             ConsoleUI = new ConsoleUI();

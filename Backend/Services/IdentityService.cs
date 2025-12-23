@@ -12,13 +12,18 @@ namespace Backend.Services
 {
     public class IdentityService : IIdentityService
     {
+        private readonly IValidationService _validationService;
         private readonly IRepository<UserDetails> _userRepository;
         private readonly IRepository<AccountDetails> _accountRepository;
+        private readonly Dictionary<string, int> _loginAttempts = new();
+        private const int MaxLoginAttempts = 3;
 
         public IdentityService(
+            IValidationService validationService,
             IRepository<UserDetails> userRepository,
             IRepository<AccountDetails> accountRepository)
         {
+            _validationService = validationService;
             _userRepository = userRepository;
             _accountRepository = accountRepository;
         }
@@ -38,31 +43,41 @@ namespace Backend.Services
                 };
             }
 
+            // Check if account is frozen
+            if (user.IsFreezed)
+            {
+                throw new AccountFrozenException();
+            }
+
             // Check if PIN matches
             if (user.Pin != loginDto.Pin)
             {
+                // Track failed login attempts
+                _loginAttempts.TryGetValue(loginDto.Username, out int attempts);
+                attempts++;
+                _loginAttempts[loginDto.Username] = attempts;
+
+                if (attempts >= MaxLoginAttempts)
+                {
+                    // Freeze account after 3 failed attempts
+                    user.IsFreezed = true;
+                    await _userRepository.UpdateDataAsync(user);
+                    throw new ExceededPinAttemptsException();
+                }
+
                 return new LoginResponseDto
                 {
                     Username = string.Empty,
                     Role = UserRole.User,
                     IsLoginSuccessful = false,
-                    IsFrozen = user.IsFreezed
+                    IsFrozen = false,
+                    Message = $"Invalid PIN. {MaxLoginAttempts - attempts} attempts remaining."
                 };
             }
 
-            // Check if account is frozen
-            if (user.IsFreezed)
-            {
-                return new LoginResponseDto
-                {
-                    Username = user.Username,
-                    Role = user.Role,
-                    IsLoginSuccessful = false,
-                    IsFrozen = true
-                };
-            }
+            // Successful login - clear attempts
+            _loginAttempts.Remove(loginDto.Username);
 
-            // Successful login
             return new LoginResponseDto
             {
                 Username = user.Username,
@@ -131,21 +146,11 @@ namespace Backend.Services
             return true;
         }
 
-        public async Task<BalanceDto> GetBalanceAsync(string username)
-        {
-            var account = await _accountRepository.GetDataByUsernameAsync(username);
-            
-            return new BalanceDto
-            {
-                Username = username,
-                Balance = account != null ? account.Balance : 0
-            };
-        }
 
         public async Task<bool> FreezeAccountAsync(string username, string adminUsername)
         {
             // Validate admin
-            await ValidateAdminAsync(adminUsername);
+            await _validationService.ValidateAdminAsync(adminUsername);
 
             var user = await _userRepository.GetDataByUsernameAsync(username);
             if (user == null)
@@ -162,7 +167,7 @@ namespace Backend.Services
         public async Task<bool> UnfreezeAccountAsync(UnfreezeUserDto dto)
         {
             // Validate admin
-            await ValidateAdminAsync(dto.AdminUsername);
+            await _validationService.ValidateAdminAsync(dto.AdminUsername);
 
             var user = await _userRepository.GetDataByUsernameAsync(dto.Username);
             if (user == null)
@@ -173,13 +178,16 @@ namespace Backend.Services
             user.IsFreezed = false;
             await _userRepository.UpdateDataAsync(user);
 
+            // Clear login attempts when unfreezing
+            _loginAttempts.Remove(dto.Username);
+
             return true;
         }
 
         public async Task<UserListDto> GetFrozenAccountsAsync(string adminUsername)
         {
             // Validate admin
-            await ValidateAdminAsync(adminUsername);
+            await _validationService.ValidateAdminAsync(adminUsername);
 
             var allUsers = await _userRepository.GetAllDataAsync();
             var frozenUsers = allUsers.Where(u => u.IsFreezed).ToList();
@@ -209,15 +217,6 @@ namespace Backend.Services
                 IsFrozen = false,
                 Balance = 0
             };
-        }
-
-        private async Task ValidateAdminAsync(string username)
-        {
-            var user = await _userRepository.GetDataByUsernameAsync(username);
-            if (user == null || user.Role != UserRole.Admin)
-            {
-                throw new UnauthorizedAccessException("Only administrators can perform this operation.");
-            }
         }
     }
 }

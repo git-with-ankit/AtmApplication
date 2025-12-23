@@ -12,18 +12,18 @@ namespace Backend.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly IRepository<UserDetails> _userRepository;
+        private readonly IValidationService _validationService;
         private readonly IRepository<AccountDetails> _accountRepository;
         private readonly IRepository<AtmDetails> _atmRepository;
         private readonly IRepository<TransactionDetails> _transactionRepository;
 
         public TransactionService(
-            IRepository<UserDetails> userRepository,
+            IValidationService validationService,
             IRepository<AccountDetails> accountRepository,
             IRepository<AtmDetails> atmRepository,
             IRepository<TransactionDetails> transactionRepository)
         {
-            _userRepository = userRepository;
+            _validationService = validationService;
             _accountRepository = accountRepository;
             _atmRepository = atmRepository;
             _transactionRepository = transactionRepository;
@@ -38,14 +38,14 @@ namespace Backend.Services
             }
 
             // Update user balance
-            account.Balance += (double)transactionDto.Amount;
+            account.Balance += transactionDto.Amount;
             await _accountRepository.UpdateDataAsync(account);
 
             // Update ATM balance
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
             if (atmDetails != null)
             {
-                atmDetails.TotalBalance += (double)transactionDto.Amount;
+                atmDetails.TotalBalance += transactionDto.Amount;
                 await _atmRepository.UpdateDataAsync(atmDetails);
             }
 
@@ -77,7 +77,7 @@ namespace Backend.Services
             var account = await _accountRepository.GetDataByUsernameAsync(transactionDto.Username);
             if (account == null)
             {
-                throw new InvalidOperationException("Account not found.");
+                throw new InvalidOperationException(ExceptionMessages.AccountNotFound);
             }
 
             // Check user balance
@@ -88,17 +88,17 @@ namespace Backend.Services
 
             // Check ATM balance
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails == null || atmDetails.TotalBalance < (double)transactionDto.Amount)
+            if (atmDetails == null || atmDetails.TotalBalance < transactionDto.Amount)
             {
                 throw new InsufficientFundsException();
             }
 
             // Update user balance
-            account.Balance -= (double)transactionDto.Amount;
+            account.Balance -= transactionDto.Amount;
             await _accountRepository.UpdateDataAsync(account);
 
             // Update ATM balance
-            atmDetails.TotalBalance -= (double)transactionDto.Amount;
+            atmDetails.TotalBalance -= transactionDto.Amount;
             await _atmRepository.UpdateDataAsync(atmDetails);
 
             // Record transaction
@@ -106,7 +106,7 @@ namespace Backend.Services
             {
                 UserName = transactionDto.Username,
                 Type = transactionDto.Type,
-                Amount = (double)transactionDto.Amount,
+                Amount = transactionDto.Amount,
                 TimeStamp = DateTime.UtcNow,
                 NewBalance = account.Balance,
                 IsAdminTransaction = false
@@ -146,10 +146,26 @@ namespace Backend.Services
             };
         }
 
+        public async Task<BalanceDto> GetBalanceAsync(string username)
+        {
+            var account = await _accountRepository.GetDataByUsernameAsync(username);
+            if (account == null)
+            {
+                throw new InvalidOperationException(
+                    string.Format(ExceptionMessages.AccountNotFound, username));
+            }
+
+            return new BalanceDto
+            {
+                Username = username,
+                Balance = account.Balance
+            };
+        }
+
         public async Task<AtmBalanceDto> GetAtmBalanceAsync(string adminUsername)
         {
             // Validate admin
-            await ValidateAdminAsync(adminUsername);
+            await _validationService.ValidateAdminAsync(adminUsername);
 
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
 
@@ -162,7 +178,7 @@ namespace Backend.Services
         public async Task<bool> DepositToAtmAsync(DepositCashDto dto)
         {
             // Validate admin
-            await ValidateAdminAsync(dto.AdminUsername);
+            await _validationService.ValidateAdminAsync(dto.AdminUsername);
 
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
             
@@ -172,13 +188,15 @@ namespace Backend.Services
                 atmDetails = new AtmDetails
                 {
                     AdminUsername = dto.AdminUsername,
-                    TotalBalance = (double)dto.Amount
+                    TotalBalance = dto.Amount
                 };
                 await _atmRepository.AddDataAsync(atmDetails);
             }
             else
             {
-                atmDetails.TotalBalance += (double)dto.Amount;
+                // Update balance and current admin
+                atmDetails.TotalBalance += dto.Amount;
+                atmDetails.AdminUsername = dto.AdminUsername;
                 await _atmRepository.UpdateDataAsync(atmDetails);
             }
 
@@ -187,7 +205,7 @@ namespace Backend.Services
             {
                 UserName = dto.AdminUsername,
                 Type = TransactionType.Credit,
-                Amount = (double)dto.Amount,
+                Amount = dto.Amount,
                 TimeStamp = DateTime.UtcNow,
                 NewBalance = atmDetails.TotalBalance,
                 IsAdminTransaction = true
@@ -198,13 +216,5 @@ namespace Backend.Services
             return true;
         }
 
-        private async Task ValidateAdminAsync(string username)
-        {
-            var user = await _userRepository.GetDataByUsernameAsync(username);
-            if (user == null || user.Role != UserRole.Admin)
-            {
-                throw new UnauthorizedAccessException("Only administrators can perform this operation.");
-            }
-        }
     }
 }

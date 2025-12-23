@@ -243,7 +243,8 @@ namespace Frontend.UserInterface
                     return false;
                 }
 
-                var balanceDto = await _identityService.GetBalanceAsync(username);
+
+                var balanceDto = await _transactionService.GetBalanceAsync(username);
                 _consoleUI.DisplayBalance(balanceDto.Balance);
                 
                 return true;

@@ -13,5 +13,6 @@ namespace Backend.DTOs
         public UserRole Role { get; set; }
         public bool IsLoginSuccessful { get; set; }
         public bool IsFrozen { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }

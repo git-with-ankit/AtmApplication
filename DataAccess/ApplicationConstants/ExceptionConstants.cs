@@ -16,5 +16,6 @@ namespace DataAccess.ApplicationConstants
         public const string InvalidAccountDetailsFormat = "Invalid account details format. Expected 2 fields.";
         public const string InvalidAtmDetailsFormat = "Invalid ATM details format. Expected 2 fields.";
         public const string InvalidTransactionDetailsFormat = "Invalid transaction details format. Expected 6 fields.";
+        public const string AtmNotInitialized = "ATM has not been initialized. Please contact system administrator.";
     }
 }

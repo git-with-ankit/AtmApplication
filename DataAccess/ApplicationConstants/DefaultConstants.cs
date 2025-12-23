@@ -9,6 +9,6 @@ namespace DataAccess.ApplicationConstants
     internal class DefaultConstants
     {
         public const string AdminUsername = "Admin123";
-        public const string AdminPin = "Admin@123";
+        public const int AdminPin = 1234;
     }
 }

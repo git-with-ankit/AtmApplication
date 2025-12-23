@@ -17,6 +17,11 @@ namespace Backend.Services
         Task<TransactionResponseDto> WithdrawAsync(TransactionDto transactionDto);
 
         /// <summary>
+        /// Gets the account balance for a user.
+        /// </summary>
+        Task<BalanceDto> GetBalanceAsync(string username);
+
+        /// <summary>
         /// Gets transaction history for a user.
         /// </summary>
         Task<TransactionsHistoryDto> GetTransactionHistoryAsync(string username, int count);

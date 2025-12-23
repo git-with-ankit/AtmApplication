@@ -67,6 +67,7 @@ namespace DataAccess.FileRepository
             await SaveAllDataAsync(remainingRecords);
         }
 
+
         private static AtmDetails ParseAtmDetails(string record)
         {
             var values = record.Split(',');

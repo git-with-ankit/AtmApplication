@@ -22,11 +22,6 @@ namespace Backend.Services
         Task<bool> ChangePinAsync(PinChangeDto pinChangeDto);
 
         /// <summary>
-        /// Gets the account balance for a user.
-        /// </summary>
-        Task<BalanceDto> GetBalanceAsync(string username);
-
-        /// <summary>
         /// Freezes a user account. Admin only operation.
         /// </summary>
         /// <exception cref="UnauthorizedAccessException">Thrown when non-admin attempts this operation.</exception>

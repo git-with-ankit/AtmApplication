@@ -29,7 +29,7 @@ namespace DataAccess.FileRepository
             {
                 if(filePath == FilePaths.UsersFilePath)
                 {
-                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},{UserRole.Admin},False,True";
+                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},{UserRole.Admin},False";
                     File.WriteAllText(filePath, adminLine);
                 }
                 else
