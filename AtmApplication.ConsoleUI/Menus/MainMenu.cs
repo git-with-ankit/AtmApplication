@@ -1,33 +1,31 @@
 using System;
 using System.Threading.Tasks;
-using AtmApplication.Frontend.Helper;
+using AtmApplication.ConsoleUI.ApplicationConstants;
 using AtmApplication.Frontend.Model;
-using AtmApplication.Frontend.UserInterface;
+using AtmApplication.ConsoleUI.Helper;
 
-namespace AtmApplication.Frontend.UserInterface
+namespace AtmApplication.ConsoleUI.Menus
 {
     internal class MainMenu
     {
-        private readonly ConsoleUI _consoleUI;
         private readonly UserMenu _userMenu;
         private readonly AdminMenu _adminMenu;
 
-        public MainMenu(ConsoleUI consoleUI, UserMenu userMenu, AdminMenu adminMenu)
+        public MainMenu(UserMenu userMenu, AdminMenu adminMenu)
         {
-            _consoleUI = consoleUI ?? throw new ArgumentNullException(nameof(consoleUI));
             _userMenu = userMenu ?? throw new ArgumentNullException(nameof(userMenu));
             _adminMenu = adminMenu ?? throw new ArgumentNullException(nameof(adminMenu));
         }
 
         public async Task RunAsync()
         {
-            _consoleUI.Clear();
-            _consoleUI.DisplayMessage(UIMessages.WelcomeMessage);
+            DisplayHelper.Clear();
+            DisplayHelper.DisplayMessage(UIMessages.WelcomeMessage);
 
             while (true)
             {
-                _consoleUI.DisplayMessage(UIMessages.SelectRole);
-                Console.Write(UIMessages.EnterChoice + " ");
+                DisplayHelper.DisplayMessage(UIMessages.SelectRole);
+                DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
 
                 var role = InputHelper.GetEnumInput<RoleOption>();
 

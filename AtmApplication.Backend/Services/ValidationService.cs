@@ -1,7 +1,8 @@
+using AtmApplication.Backend.ApplicationConstants;
 using AtmApplication.DataAccess;
 using AtmApplication.DataAccess.Entities;
-using AtmApplication.Backend.ApplicationConstants;
 using AtmApplication.DataAccess.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace AtmApplication.Backend.Services
 {
@@ -9,7 +10,7 @@ namespace AtmApplication.Backend.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IAccountRepository _accountRepository;
-
+        private static readonly Regex UsernameRegex = new(@"^[a-zA-Z0-9_]{"" + Constants.MinUsernameLength + "","" + Constants.MaxUsernameLength + ""}$", RegexOptions.Compiled);
         public ValidationService(
             IUserRepository userRepository,
             IAccountRepository accountRepository)
@@ -45,6 +46,11 @@ namespace AtmApplication.Backend.Services
                 throw new InvalidOperationException(
                     string.Format(ExceptionMessages.UserNotFound, username));
             }
+        }
+
+        public bool ValidateUsernameFormat(string username)
+        {
+            return !string.IsNullOrWhiteSpace(username) && UsernameRegex.IsMatch(username);
         }
     }
 }

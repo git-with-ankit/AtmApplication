@@ -1,5 +1,6 @@
 using AtmApplication.DataAccess.ApplicationConstants;
 using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.Helper;
 using AtmApplication.DataAccess.Interfaces;
 using System;
 using System.Collections.Generic;

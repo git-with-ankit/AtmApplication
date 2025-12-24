@@ -1,6 +1,6 @@
 using AtmApplication.Backend.ApplicationConstants;
 
-namespace AtmApplication.Frontend.Helper
+namespace AtmApplication.ConsoleUI.ApplicationConstants
 {
     internal static class UIMessages
     {

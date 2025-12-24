@@ -9,5 +9,6 @@ namespace AtmApplication.Backend.Services
         Task ValidateAdminAsync(string username);
         Task ValidateAccountExistsAsync(string username);
         Task ValidateUserExistsAsync(string username);
+        bool ValidateUsernameFormat(string username);
     }
 }

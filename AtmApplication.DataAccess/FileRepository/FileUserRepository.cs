@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AtmApplication.DataAccess.ApplicationConstants;
 using AtmApplication.DataAccess.Interfaces;
+using AtmApplication.DataAccess.Helper;
 
 namespace AtmApplication.DataAccess.FileRepository
 {

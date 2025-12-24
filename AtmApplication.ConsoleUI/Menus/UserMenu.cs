@@ -5,31 +5,32 @@ using AtmApplication.Backend.DTOs;
 using AtmApplication.Backend.Exceptions;
 using AtmApplication.Backend.Services;
 using AtmApplication.DataAccess.Entities;
-using AtmApplication.Frontend.Helper;
 using AtmApplication.Frontend.Model;
-using AtmApplication.Frontend.UserInterface;
+using AtmApplication.ConsoleUI.Menus;
+using AtmApplication.ConsoleUI.Helper;
+using AtmApplication.ConsoleUI.ApplicationConstants;
 
-namespace AtmApplication.Frontend.UserInterface
+namespace AtmApplication.ConsoleUI.Menus
 {
     internal class UserMenu
     {
-        private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
         private readonly ITransactionService _transactionService;
+        private readonly IValidationService _validationService;
 
         public UserMenu(
-            ConsoleUI consoleUI, IIdentityService identityService, ITransactionService transactionService)
+            IIdentityService identityService, ITransactionService transactionService, IValidationService validationService)
         {
-            _consoleUI = consoleUI;
             _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
             _transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
+            _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         }
 
         public async Task HandleUserMenuAsync()
         {
-            _consoleUI.DisplayMessage(UIMessages.WelcomeUser);
-            _consoleUI.DisplayMessage(UIMessages.UserMenu);
-            Console.Write(UIMessages.EnterChoice + " ");
+            DisplayHelper.DisplayMessage(UIMessages.WelcomeUser);
+            DisplayHelper.DisplayMessage(UIMessages.UserMenu);
+            DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
 
             var option = InputHelper.GetEnumInput<UserMenuOption>();
 
@@ -50,9 +51,9 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                _consoleUI.DisplayMessage(UIMessages.WelcomeSignup);
+                DisplayHelper.DisplayMessage(UIMessages.WelcomeSignup);
                 
-                string username = InputHelper.GetUsernameInput();
+                string username = InputHelper.GetUsernameInput(_validationService);
                 int pin = InputHelper.GetPinInput();
 
                 var signupDto = new SignupDto
@@ -63,17 +64,17 @@ namespace AtmApplication.Frontend.UserInterface
                 };
 
                 var result = await _identityService.SignupAsync(signupDto);
-                _consoleUI.DisplaySuccess(UIMessages.SignupSuccess);
+                DisplayHelper.DisplaySuccess(UIMessages.SignupSuccess);
                 
                 await HandleUserActionsAsync(username, pin);
             }
             catch (UsernameTakenException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Signup failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Signup failed: {ex.Message}");
             }
         }
 
@@ -81,9 +82,9 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                _consoleUI.DisplayMessage(UIMessages.WelcomeLogin);
+                DisplayHelper.DisplayMessage(UIMessages.WelcomeLogin);
                 
-                string username = InputHelper.GetUsernameInput();
+                string username = InputHelper.GetUsernameInput(_validationService);
                 int pin = InputHelper.GetPinInput();
 
                 var loginDto = new LoginDto
@@ -98,27 +99,27 @@ namespace AtmApplication.Frontend.UserInterface
                 {
                     if (result.IsFrozen)
                     {
-                        _consoleUI.DisplayError(UIMessages.AccountFrozen);
-                        _consoleUI.DisplayMessage(UIMessages.ContactAdmin);
+                        DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                        DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
                     }
                     else
                     {
-                        _consoleUI.DisplayError(ExceptionMessages.InvalidCredentials);
+                        DisplayHelper.DisplayError(ExceptionMessages.InvalidCredentials);
                     }
                     return;
                 }
 
-                _consoleUI.DisplaySuccess(string.Format(UIMessages.LoginSuccess, username));
+                DisplayHelper.DisplaySuccess(string.Format(UIMessages.LoginSuccess, username));
                 await HandleUserActionsAsync(username, pin);
             }
             catch (AccountFrozenException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
-                _consoleUI.DisplayMessage(UIMessages.ContactAdmin);
+                DisplayHelper.DisplayError(ex.Message);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Login failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Login failed: {ex.Message}");
             }
         }
 
@@ -126,8 +127,8 @@ namespace AtmApplication.Frontend.UserInterface
         {
             while (true)
             {
-                _consoleUI.DisplayMessage(UIMessages.UserActionMenu);
-                Console.Write(UIMessages.EnterChoice + " ");
+                DisplayHelper.DisplayMessage(UIMessages.UserActionMenu);
+                DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
 
                 var action = InputHelper.GetEnumInput<UserActionOption>();
 
@@ -151,7 +152,7 @@ namespace AtmApplication.Frontend.UserInterface
                         await HandleViewTransactionsAsync(username);
                         break;
                     case UserActionOption.SignOut:
-                        _consoleUI.DisplayMessage(UIMessages.SigningOut);
+                        DisplayHelper.DisplayMessage(UIMessages.SigningOut);
                         return;
                 }
 
@@ -179,14 +180,14 @@ namespace AtmApplication.Frontend.UserInterface
                 };
 
                 var result = await _transactionService.DepositAsync(transactionDto);
-                _consoleUI.DisplaySuccess(string.Format(UIMessages.DepositSuccess, amount.ToString("F2")));
-                _consoleUI.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
+                DisplayHelper.DisplaySuccess(string.Format(UIMessages.DepositSuccess, amount.ToString("F2")));
+                DisplayHelper.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
                 
                 return true;
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Deposit failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Deposit failed: {ex.Message}");
                 return true;
             }
         }
@@ -211,19 +212,19 @@ namespace AtmApplication.Frontend.UserInterface
                 };
 
                 var result = await _transactionService.WithdrawAsync(transactionDto);
-                _consoleUI.DisplaySuccess(string.Format(UIMessages.WithdrawSuccess, amount.ToString("F2")));
-                _consoleUI.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
+                DisplayHelper.DisplaySuccess(string.Format(UIMessages.WithdrawSuccess, amount.ToString("F2")));
+                DisplayHelper.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
                 
                 return true;
             }
             catch (InsufficientFundsException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
                 return true;
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Withdrawal failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Withdrawal failed: {ex.Message}");
                 return true;
             }
         }
@@ -240,13 +241,13 @@ namespace AtmApplication.Frontend.UserInterface
 
 
                 var balanceDto = await _transactionService.GetBalanceAsync(username);
-                _consoleUI.DisplayBalance(balanceDto.Balance);
+                DisplayHelper.DisplayBalance(balanceDto.Balance);
                 
                 return true;
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Failed to retrieve balance: {ex.Message}");
+                DisplayHelper.DisplayError($"Failed to retrieve balance: {ex.Message}");
                 return true;
             }
         }
@@ -255,17 +256,16 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                if (!await VerifyPinWithAttemptsAsync(currentPin, username))
-                {
-                    return false;
-                }
-
-
-                int newPin = InputHelper.GetPinInput(string.Format(UIMessages.EnterNewPin, Constants.PinLength));
+                DisplayHelper.DisplayMessage("\n--- Change PIN ---");
+                DisplayHelper.DisplayMessage($"Enter new PIN ({Constants.PinLength} digits):");
+                int newPin = InputHelper.GetPinInput();
+                
+                DisplayHelper.DisplayMessage($"Confirm new PIN ({Constants.PinLength} digits):");
+                int confirmPin = InputHelper.GetPinInput();
 
                 if (newPin == currentPin)
                 {
-                    _consoleUI.DisplayError("New PIN cannot be the same as current PIN.");
+                    DisplayHelper.DisplayError("New PIN cannot be the same as current PIN.");
                     return true;
                 }
 
@@ -280,18 +280,18 @@ namespace AtmApplication.Frontend.UserInterface
                 
                 if (success)
                 {
-                    _consoleUI.DisplaySuccess(UIMessages.PinChangeSuccess);
+                    DisplayHelper.DisplaySuccess(UIMessages.PinChangeSuccess);
                 }
                 else
                 {
-                    _consoleUI.DisplayError("PIN change failed.");
+                    DisplayHelper.DisplayError("PIN change failed.");
                 }
                 
                 return true;
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"PIN change failed: {ex.Message}");
+                DisplayHelper.DisplayError($"PIN change failed: {ex.Message}");
                 return true;
             }
         }
@@ -301,12 +301,12 @@ namespace AtmApplication.Frontend.UserInterface
             try
             {
                 var history = await _transactionService.GetTransactionHistoryAsync(username, 5);
-                _consoleUI.DisplayMessage("\n--- Last 5 Transactions ---");
-                _consoleUI.DisplayTransactionHistory(history);
+                DisplayHelper.DisplayMessage("\n--- Last 5 Transactions ---");
+                DisplayHelper.DisplayTransactionHistory(history);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Failed to retrieve transactions: {ex.Message}");
+                DisplayHelper.DisplayError($"Failed to retrieve transactions: {ex.Message}");
             }
         }
 
@@ -326,11 +326,11 @@ namespace AtmApplication.Frontend.UserInterface
                 attempts--;
                 if (attempts > 0)
                 {
-                    _consoleUI.DisplayError(string.Format(UIMessages.PinMismatch, attempts));
+                    DisplayHelper.DisplayError(string.Format(UIMessages.PinMismatch, attempts));
                 }
             }
 
-            _consoleUI.DisplayError(UIMessages.PinAttemptsExceeded);
+            DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
             await HandleFreezeAccountAsync(username);
             return false;
         }
@@ -340,12 +340,12 @@ namespace AtmApplication.Frontend.UserInterface
             try
             {
                 await _identityService.FreezeAccountAsync(username);
-                _consoleUI.DisplayError(UIMessages.AccountFrozen);
-                _consoleUI.DisplayMessage(UIMessages.ContactAdmin);
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Error: {ex.Message}");
+                DisplayHelper.DisplayError($"Error: {ex.Message}");
             }
         }
     }

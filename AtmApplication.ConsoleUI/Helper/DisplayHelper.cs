@@ -2,42 +2,47 @@ using System;
 using AtmApplication.Backend.DTOs;
 using AtmApplication.DataAccess.Entities;
 
-namespace AtmApplication.Frontend.UserInterface
+namespace AtmApplication.ConsoleUI.Helper
 {
-    internal class ConsoleUI
+    internal static class DisplayHelper
     {
-        public void DisplayMessage(string message)
+        public static void DisplayMessage(string message)
         {
             Console.WriteLine(message);
         }
 
-        public void DisplayError(string error)
+        public static void DisplayError(string error)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(error);
             Console.ResetColor();
         }
 
-        public void DisplaySuccess(string success)
+        public static void DisplaySuccess(string success)
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(success);
             Console.ResetColor();
         }
 
-        public void DisplayInfo(string info)
+        public static void DisplayInfo(string info)
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine(info);
             Console.ResetColor();
         }
 
-        public void Clear()
+        public static void Clear()
         {
             Console.Clear();
         }
 
-        public void DisplayTransactionHistory(TransactionsHistoryDto history)
+        public static void DisplayPrompt(string prompt)
+        {
+            Console.Write(prompt);
+        }
+
+        public static void DisplayTransactionHistory(TransactionsHistoryDto history)
         {
             if (history.Transactions.Count == 0)
             {
@@ -55,17 +60,17 @@ namespace AtmApplication.Frontend.UserInterface
             }
         }
 
-        public void DisplayBalance(double balance)
+        public static void DisplayBalance(double balance)
         {
             Console.WriteLine($"\nYour current balance: ${balance:F2}");
         }
 
-        public void DisplayAtmBalance(double balance)
+        public static void DisplayAtmBalance(double balance)
         {
             Console.WriteLine($"\nATM Total Balance: ${balance:F2}");
         }
 
-        public void DisplayFrozenAccounts(UserListDto user)
+        public static void DisplayFrozenAccounts(UserListDto user)
         {
             if (string.IsNullOrEmpty(user.Username))
             {

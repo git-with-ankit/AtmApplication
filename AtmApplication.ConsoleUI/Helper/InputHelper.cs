@@ -1,7 +1,10 @@
 using System;
 using AtmApplication.Backend.ApplicationConstants;
+using AtmApplication.Backend.Services;
+using AtmApplication.ConsoleUI.ApplicationConstants;
+using AtmApplication.ConsoleUI.Menus;
 
-namespace AtmApplication.Frontend.Helper
+namespace AtmApplication.ConsoleUI.Helper
 {
     internal static class InputHelper
     {
@@ -14,14 +17,14 @@ namespace AtmApplication.Frontend.Helper
                 {
                     return (TEnum)(object)value;
                 }
-                Console.WriteLine(UIMessages.InvalidInput);
-                Console.Write(UIMessages.EnterChoice + " ");
+                DisplayHelper.DisplayError(UIMessages.InvalidInput);
+                DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
             }
         }
 
         public static string GetStringInput(string prompt)
         {
-            Console.Write(prompt + " ");
+            DisplayHelper.DisplayPrompt(prompt + " ");
             return Console.ReadLine()?.Trim() ?? string.Empty;
         }
 
@@ -30,14 +33,14 @@ namespace AtmApplication.Frontend.Helper
             while (true)
             {
                 var prompt = string.Format(UIMessages.EnterPin, Constants.PinLength);
-                Console.Write(prompt + " ");
+                DisplayHelper.DisplayPrompt(prompt + " ");
                 string input = Console.ReadLine()?.Trim() ?? string.Empty;
 
                 if (int.TryParse(input, out int pin) && input.Length == Constants.PinLength)
                 {
                     return pin;
                 }
-                Console.WriteLine(string.Format(UIMessages.InvalidPin, Constants.PinLength));
+                DisplayHelper.DisplayError(string.Format(UIMessages.InvalidPin, Constants.PinLength));
             }
         }
 
@@ -45,53 +48,35 @@ namespace AtmApplication.Frontend.Helper
         {
             while (true)
             {
-                Console.Write(UIMessages.EnterAmount + " ");
+                DisplayHelper.DisplayPrompt(UIMessages.EnterAmount + " ");
                 string input = Console.ReadLine()?.Trim() ?? string.Empty;
                 
                 if (double.TryParse(input, out double amount) && amount > 0)
                 {
                     return amount;
                 }
-                Console.WriteLine(UIMessages.InvalidAmount);
+                DisplayHelper.DisplayError(UIMessages.InvalidAmount);
             }
         }
 
-        public static string GetUsernameInput()
+        public static string GetUsernameInput(IValidationService validationService)
         {
             while (true)
             {
-                Console.Write(UIMessages.EnterUsername + " ");
+                DisplayHelper.DisplayPrompt(UIMessages.EnterUsername + " ");
                 string username = Console.ReadLine()?.Trim() ?? string.Empty;
                 
-                if (IsValidUsername(username))
+                if (validationService.ValidateUsernameFormat(username))
                 {
                     return username;
                 }
-                Console.WriteLine(string.Format(UIMessages.InvalidUsername, Constants.MinUsernameLength, Constants.MaxUsernameLength));
+                DisplayHelper.DisplayError(string.Format(UIMessages.InvalidUsername, Constants.MinUsernameLength, Constants.MaxUsernameLength));
             }
-        }
-
-        private static bool IsValidUsername(string username)
-        {
-            if (string.IsNullOrWhiteSpace(username) || username.Length < Constants.MinUsernameLength || username.Length > Constants.MaxUsernameLength)
-            {
-                return false;
-            }
-
-            foreach (char c in username)
-            {
-                if (!char.IsLetterOrDigit(c) && c != '_')
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         public static void PressEnterToContinue()
         {
-            Console.WriteLine(UIMessages.PressEnterToContinue);
+            DisplayHelper.DisplayMessage(UIMessages.PressEnterToContinue);
             Console.ReadLine();
         }
     }

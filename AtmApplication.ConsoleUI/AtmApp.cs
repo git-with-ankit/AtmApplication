@@ -2,8 +2,7 @@ using AtmApplication.Backend.Services;
 using AtmApplication.DataAccess.Entities;
 using AtmApplication.DataAccess.FileRepository;
 using AtmApplication.DataAccess.Interfaces;
-using AtmApplication.Frontend.UserInterface;
-
+using AtmApplication.ConsoleUI.Menus;
 namespace AtmApplication.Frontend.Dependencies
 {
     internal sealed class AtmApp
@@ -15,7 +14,6 @@ namespace AtmApplication.Frontend.Dependencies
         public IIdentityService IdentityService { get; }
         public ITransactionService TransactionService { get; }
         public IValidationService ValidationService { get; }
-        public ConsoleUI ConsoleUI { get; }
         public UserMenu UserMenu { get; }
         public AdminMenu AdminMenu { get; }
         public MainMenu MainMenu { get; }
@@ -31,10 +29,9 @@ namespace AtmApplication.Frontend.Dependencies
             IdentityService = new IdentityService(ValidationService, UserRepository, AccountRepository, AtmRepository);
             TransactionService = new TransactionService(ValidationService, AccountRepository, AtmRepository, TransactionRepository);
 
-            ConsoleUI = new ConsoleUI();
-            UserMenu = new UserMenu(ConsoleUI, IdentityService, TransactionService);
-            AdminMenu = new AdminMenu(ConsoleUI, IdentityService, TransactionService);
-            MainMenu = new MainMenu(ConsoleUI, UserMenu, AdminMenu);
+            UserMenu = new UserMenu(IdentityService, TransactionService, ValidationService);
+            AdminMenu = new AdminMenu(IdentityService, TransactionService, ValidationService);
+            MainMenu = new MainMenu(UserMenu, AdminMenu);
         }   
     }
 }

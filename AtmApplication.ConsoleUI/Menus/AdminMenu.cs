@@ -3,31 +3,32 @@ using System.Threading.Tasks;
 using AtmApplication.Backend.DTOs;
 using AtmApplication.Backend.Exceptions;
 using AtmApplication.Backend.Services;
+using AtmApplication.ConsoleUI.ApplicationConstants;
 using AtmApplication.DataAccess.Entities;
-using AtmApplication.Frontend.Helper;
+using AtmApplication.ConsoleUI.Helper;
 using AtmApplication.Frontend.Model;
-using AtmApplication.Frontend.UserInterface;
+using AtmApplication.ConsoleUI.Menus;
 
-namespace AtmApplication.Frontend.UserInterface
+namespace AtmApplication.ConsoleUI.Menus
 {
     internal sealed class AdminMenu
     {
-        private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
         private readonly ITransactionService _transactionService;
+        private readonly IValidationService _validationService;
 
-        public AdminMenu(ConsoleUI consoleUI, IIdentityService identityService, ITransactionService transactionService)
+        public AdminMenu(IIdentityService identityService, ITransactionService transactionService, IValidationService validationService)
         {
-            _consoleUI = consoleUI;
             _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
             _transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
+            _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         }
 
         public async Task HandleAdminMenuAsync()
         {
-            _consoleUI.DisplayMessage(UIMessages.WelcomeAdmin);
-            _consoleUI.DisplayMessage(UIMessages.AdminMenu);
-            Console.Write(UIMessages.EnterChoice + " ");
+            DisplayHelper.DisplayMessage(UIMessages.WelcomeAdmin);
+            DisplayHelper.DisplayMessage(UIMessages.AdminMenu);
+            DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
 
             var choice = InputHelper.GetEnumInput<AdminMenuOption>();
             
@@ -41,9 +42,9 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                _consoleUI.DisplayMessage(UIMessages.WelcomeAdminLogin);
+                DisplayHelper.DisplayMessage(UIMessages.WelcomeAdminLogin);
                 
-                string username = InputHelper.GetUsernameInput();
+                string username = InputHelper.GetUsernameInput(_validationService);
                 int pin = InputHelper.GetPinInput();
 
                 var loginDto = new LoginDto
@@ -56,16 +57,16 @@ namespace AtmApplication.Frontend.UserInterface
 
                 if (!result.IsLoginSuccessful || !result.IsAdmin)
                 {
-                    _consoleUI.DisplayError("Invalid admin credentials.");
+                    DisplayHelper.DisplayError("Invalid admin credentials.");
                     return;
                 }
 
-                _consoleUI.DisplaySuccess(string.Format(UIMessages.LoginSuccess, username));
+                DisplayHelper.DisplaySuccess(string.Format(UIMessages.LoginSuccess, username));
                 await HandleAdminActionsAsync(username);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Admin login failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Admin login failed: {ex.Message}");
             }
         }
 
@@ -73,8 +74,8 @@ namespace AtmApplication.Frontend.UserInterface
         {
             while (true)
             {
-                _consoleUI.DisplayMessage(UIMessages.AdminActionMenu);
-                Console.Write(UIMessages.EnterChoice + " ");
+                DisplayHelper.DisplayMessage(UIMessages.AdminActionMenu);
+                DisplayHelper.DisplayPrompt(UIMessages.EnterChoice + " ");
 
                 var action = InputHelper.GetEnumInput<AdminActionOption>();
 
@@ -99,7 +100,7 @@ namespace AtmApplication.Frontend.UserInterface
                         await HandleChangeAdminAsync(adminUsername);
                         return; // Exit after changing admin
                     case AdminActionOption.Exit:
-                        _consoleUI.DisplayMessage(UIMessages.Exiting);
+                        DisplayHelper.DisplayMessage(UIMessages.Exiting);
                         return;
                 }
             }
@@ -110,15 +111,15 @@ namespace AtmApplication.Frontend.UserInterface
             try
             {
                 var frozenAccounts = await _identityService.GetFrozenAccountsAsync(adminUsername);
-                _consoleUI.DisplayFrozenAccounts(frozenAccounts);
+                DisplayHelper.DisplayFrozenAccounts(frozenAccounts);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Failed to retrieve frozen accounts: {ex.Message}");
+                DisplayHelper.DisplayError($"Failed to retrieve frozen accounts: {ex.Message}");
             }
         }
 
@@ -126,7 +127,7 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                string username = InputHelper.GetUsernameInput();
+                string username = InputHelper.GetUsernameInput(_validationService);
 
                 var unfreezeDto = new UnfreezeUserDto
                 {
@@ -138,20 +139,20 @@ namespace AtmApplication.Frontend.UserInterface
                 
                 if (success)
                 {
-                    _consoleUI.DisplaySuccess(UIMessages.UnfreezeSuccess);
+                    DisplayHelper.DisplaySuccess(UIMessages.UnfreezeSuccess);
                 }
                 else
                 {
-                    _consoleUI.DisplayError("Failed to unfreeze account.");
+                    DisplayHelper.DisplayError("Failed to unfreeze account.");
                 }
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Unfreeze operation failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Unfreeze operation failed: {ex.Message}");
             }
         }
 
@@ -160,15 +161,15 @@ namespace AtmApplication.Frontend.UserInterface
             try
             {
                 var atmBalance = await _transactionService.GetAtmBalanceAsync(adminUsername);
-                _consoleUI.DisplayAtmBalance(atmBalance.TotalBalance);
+                DisplayHelper.DisplayAtmBalance(atmBalance.TotalBalance);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Failed to retrieve ATM balance: {ex.Message}");
+                DisplayHelper.DisplayError($"Failed to retrieve ATM balance: {ex.Message}");
             }
         }
 
@@ -188,20 +189,20 @@ namespace AtmApplication.Frontend.UserInterface
                 
                 if (success)
                 {
-                    _consoleUI.DisplaySuccess(string.Format(UIMessages.AtmDepositSuccess, amount.ToString("F2")));
+                    DisplayHelper.DisplaySuccess(string.Format(UIMessages.AtmDepositSuccess, amount.ToString("F2")));
                 }
                 else
                 {
-                    _consoleUI.DisplayError("ATM deposit failed.");
+                    DisplayHelper.DisplayError("ATM deposit failed.");
                 }
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"ATM deposit failed: {ex.Message}");
+                DisplayHelper.DisplayError($"ATM deposit failed: {ex.Message}");
             }
         }
 
@@ -210,16 +211,16 @@ namespace AtmApplication.Frontend.UserInterface
             try
             {
                 var history = await _transactionService.GetTransactionHistoryAsync(adminUsername, Backend.ApplicationConstants.Constants.DefaultTransactionHistoryCount);
-                _consoleUI.DisplayMessage("\n--- Last 5 ATM Transactions ---");
-                _consoleUI.DisplayTransactionHistory(history);
+                DisplayHelper.DisplayMessage("\n--- Last 5 ATM Transactions ---");
+                DisplayHelper.DisplayTransactionHistory(history);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Failed to retrieve ATM transactions: {ex.Message}");
+                DisplayHelper.DisplayError($"Failed to retrieve ATM transactions: {ex.Message}");
             }
         }
 
@@ -227,10 +228,10 @@ namespace AtmApplication.Frontend.UserInterface
         {
             try
             {
-                _consoleUI.DisplayMessage("\n--- Change Admin ---");
-                _consoleUI.DisplayMessage("WARNING: You will lose admin privileges after this operation!");
+                DisplayHelper.DisplayMessage("\n--- Change Admin ---");
+                DisplayHelper.DisplayMessage("WARNING: You will lose admin privileges after this operation!");
                 
-                string newAdminUsername = InputHelper.GetUsernameInput();
+                string newAdminUsername = InputHelper.GetUsernameInput(_validationService);
                 int newAdminPin = InputHelper.GetPinInput();
 
                 var changeAdminDto = new ChangeAdminDto
@@ -244,22 +245,22 @@ namespace AtmApplication.Frontend.UserInterface
                 
                 if (success)
                 {
-                    _consoleUI.DisplaySuccess(UIMessages.ChangeAdminSuccess);
-                    _consoleUI.DisplayMessage($"New admin: {newAdminUsername}");
-                    _consoleUI.DisplayMessage("You have been logged out.");
+                    DisplayHelper.DisplaySuccess(UIMessages.ChangeAdminSuccess);
+                    DisplayHelper.DisplayMessage($"New admin: {newAdminUsername}");
+                    DisplayHelper.DisplayMessage("You have been logged out.");
                 }
                 else
                 {
-                    _consoleUI.DisplayError("Failed to change admin. User not found or invalid operation.");
+                    DisplayHelper.DisplayError("Failed to change admin. User not found or invalid operation.");
                 }
             }
             catch (UnauthorizedAccessException ex)
             {
-                _consoleUI.DisplayError(ex.Message);
+                DisplayHelper.DisplayError(ex.Message);
             }
             catch (Exception ex)
             {
-                _consoleUI.DisplayError($"Change admin operation failed: {ex.Message}");
+                DisplayHelper.DisplayError($"Change admin operation failed: {ex.Message}");
             }
         }
     }
