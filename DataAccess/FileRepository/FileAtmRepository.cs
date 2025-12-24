@@ -1,5 +1,6 @@
-﻿using DataAccess.ApplicationConstants;
-using DataAccess.Entities;
+using AtmApplication.DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.FileRepository
+namespace AtmApplication.DataAccess.FileRepository
 {
-    public sealed class FileAtmRepository : FileRepositoryBase, IRepository<AtmDetails>
+    public sealed class FileAtmRepository : FileRepositoryBase, IAtmRepository
     {
         public FileAtmRepository() : base(FilePaths.AtmFilePath) { }
 
@@ -20,25 +21,6 @@ namespace DataAccess.FileRepository
                 .Where(line => !string.IsNullOrWhiteSpace(line))
                 .Select(ParseAtmDetails)
                 .ToList();
-        }
-
-        public async Task<AtmDetails?> GetDataByUsernameAsync(string username)
-        {
-            var atmRecords = await GetAllDataAsync();
-            return atmRecords.FirstOrDefault(record => record.AdminUsername.Equals(username));
-        }
-
-        public async Task AddDataAsync(AtmDetails atmDetails)
-        {
-            var existingAtm = await GetDataByUsernameAsync(atmDetails.AdminUsername);
-            if (existingAtm is not null)
-            {
-                throw new InvalidOperationException(string.Format(ExceptionConstants.AtmRecordAlreadyExists, atmDetails.AdminUsername));
-            }
-
-            var atmRecords = await GetAllDataAsync();
-            atmRecords.Add(atmDetails);
-            await SaveAllDataAsync(atmRecords);
         }
 
         public async Task UpdateDataAsync(AtmDetails atmDetails)
@@ -57,16 +39,6 @@ namespace DataAccess.FileRepository
 
             await SaveAllDataAsync(updatedRecords);
         }
-
-        public async Task DeleteDataByUsernameAsync(string username)
-        {
-            var atmRecords = await GetAllDataAsync();
-            var remainingRecords = atmRecords
-                .Where(record => !record.AdminUsername.Equals(username))
-                .ToList();
-            await SaveAllDataAsync(remainingRecords);
-        }
-
 
         private static AtmDetails ParseAtmDetails(string record)
         {

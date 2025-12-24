@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
-using Frontend.Helper;
-using Frontend.Model;
-using Frontend.UserInterface;
+using AtmApplication.Frontend.Helper;
+using AtmApplication.Frontend.Model;
+using AtmApplication.Frontend.UserInterface;
 
-namespace Frontend.UserInterface
+namespace AtmApplication.Frontend.UserInterface
 {
-    public class MainMenu
+    internal class MainMenu
     {
         private readonly ConsoleUI _consoleUI;
         private readonly UserMenu _userMenu;
@@ -29,8 +29,7 @@ namespace Frontend.UserInterface
                 _consoleUI.DisplayMessage(UIMessages.SelectRole);
                 Console.Write(UIMessages.EnterChoice + " ");
 
-                int choice = InputHelper.GetIntegerInput((int)RoleOption.User, (int)RoleOption.Admin);
-                var role = (RoleOption)choice;
+                var role = InputHelper.GetEnumInput<RoleOption>();
 
                 await HandleRoleSelectionAsync(role);
             }

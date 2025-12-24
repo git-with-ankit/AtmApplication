@@ -1,19 +1,18 @@
 using System;
-using Backend.ApplicationConstants;
-using Backend.ApplicationConstants;
+using AtmApplication.Backend.ApplicationConstants;
 
-namespace Frontend.Helper
+namespace AtmApplication.Frontend.Helper
 {
-    public class InputHelper
+    internal static class InputHelper
     {
-        public static int GetIntegerInput(int minValue, int maxValue)
+        public static TEnum GetEnumInput<TEnum>() where TEnum : struct, Enum
         {
             while (true)
             {
                 string input = Console.ReadLine()?.Trim() ?? string.Empty;
-                if (int.TryParse(input, out int value) && value >= minValue && value <= maxValue)
+                if (int.TryParse(input, out int value) && Enum.IsDefined<TEnum>((TEnum)(object)value))
                 {
-                    return value;
+                    return (TEnum)(object)value;
                 }
                 Console.WriteLine(UIMessages.InvalidInput);
                 Console.Write(UIMessages.EnterChoice + " ");
@@ -28,21 +27,17 @@ namespace Frontend.Helper
 
         public static int GetPinInput()
         {
-            return GetPinInput(UIMessages.EnterPin);
-        }
-
-        public static int GetPinInput(string prompt)
-        {
             while (true)
             {
+                var prompt = string.Format(UIMessages.EnterPin, Constants.PinLength);
                 Console.Write(prompt + " ");
                 string input = Console.ReadLine()?.Trim() ?? string.Empty;
-                
+
                 if (int.TryParse(input, out int pin) && input.Length == Constants.PinLength)
                 {
                     return pin;
                 }
-                Console.WriteLine(UIMessages.InvalidPin);
+                Console.WriteLine(string.Format(UIMessages.InvalidPin, Constants.PinLength));
             }
         }
 
@@ -72,13 +67,13 @@ namespace Frontend.Helper
                 {
                     return username;
                 }
-                Console.WriteLine(UIMessages.InvalidUsername);
+                Console.WriteLine(string.Format(UIMessages.InvalidUsername, Constants.MinUsernameLength, Constants.MaxUsernameLength));
             }
         }
 
         private static bool IsValidUsername(string username)
         {
-            if (string.IsNullOrWhiteSpace(username) || username.Length < 3 || username.Length > 20)
+            if (string.IsNullOrWhiteSpace(username) || username.Length < Constants.MinUsernameLength || username.Length > Constants.MaxUsernameLength)
             {
                 return false;
             }

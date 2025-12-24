@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.DTOs
+namespace AtmApplication.Backend.DTOs
 {
-    public sealed class LoginDTO
+    public sealed class LoginDto
     {
         public string Username { get; set; }
         public int Pin { get; set; }

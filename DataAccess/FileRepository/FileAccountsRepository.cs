@@ -1,5 +1,6 @@
-﻿using DataAccess.ApplicationConstants;
-using DataAccess.Entities;
+using AtmApplication.DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.FileRepository
+namespace AtmApplication.DataAccess.FileRepository
 {
-    public sealed class FileAccountsRepository : FileRepositoryBase, IRepository<AccountDetails>
+    public sealed class FileAccountsRepository : FileRepositoryBase, IAccountRepository
     {
         public FileAccountsRepository() : base(FilePaths.AccountsFilePath) { }
 
@@ -41,15 +42,6 @@ namespace DataAccess.FileRepository
             await SaveAllDataAsync(accountRecords);
         }
 
-        public async Task DeleteDataByUsernameAsync(string username)
-        {
-            var accountRecords = await GetAllDataAsync();
-            var remainingAccounts = accountRecords
-                .Where(record => !record.Username.Equals(username))
-                .ToList();
-            await SaveAllDataAsync(remainingAccounts);
-        }
-
         public async Task UpdateDataAsync(AccountDetails account)
         {
             var accountRecords = await GetAllDataAsync();
@@ -65,12 +57,6 @@ namespace DataAccess.FileRepository
                 .ToList();
 
             await SaveAllDataAsync(updatedAccounts);
-        }
-
-        public async Task<double> GetBalanceAsync(string username)
-        {
-            var account = await GetDataByUsernameAsync(username);
-            return account?.Balance ?? 0;
         }
 
         public async Task UpdateBalanceAsync(string username, double newBalance)

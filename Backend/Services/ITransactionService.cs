@@ -1,8 +1,8 @@
-using Backend.DTOs;
+using AtmApplication.Backend.DTOs;
 
 using System.Threading.Tasks;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
     public interface ITransactionService
     {

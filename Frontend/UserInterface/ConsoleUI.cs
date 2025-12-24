@@ -1,10 +1,10 @@
 using System;
-using Backend.DTOs;
-using DataAccess.Entities;
+using AtmApplication.Backend.DTOs;
+using AtmApplication.DataAccess.Entities;
 
-namespace Frontend.UserInterface
+namespace AtmApplication.Frontend.UserInterface
 {
-    public class ConsoleUI
+    internal class ConsoleUI
     {
         public void DisplayMessage(string message)
         {

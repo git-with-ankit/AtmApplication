@@ -1,17 +1,17 @@
-using Backend.Services;
-using DataAccess;
-using DataAccess.Entities;
-using DataAccess.FileRepository;
-using Frontend.UserInterface;
+using AtmApplication.Backend.Services;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.FileRepository;
+using AtmApplication.DataAccess.Interfaces;
+using AtmApplication.Frontend.UserInterface;
 
-namespace Frontend.Dependencies
+namespace AtmApplication.Frontend.Dependencies
 {
-    public class AtmApp
+    internal sealed class AtmApp
     {
-        public IRepository<UserDetails> UserRepository { get; }
-        public IRepository<AccountDetails> AccountRepository { get; }
-        public IRepository<AtmDetails> AtmRepository { get; }
-        public IRepository<TransactionDetails> TransactionRepository { get; }
+        public IUserRepository UserRepository { get; }
+        public IAccountRepository AccountRepository { get; }
+        public IAtmRepository AtmRepository { get; }
+        public ITransactionRepository TransactionRepository { get; }
         public IIdentityService IdentityService { get; }
         public ITransactionService TransactionService { get; }
         public IValidationService ValidationService { get; }

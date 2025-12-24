@@ -1,11 +1,11 @@
-﻿using DataAccess.Entities;
+using AtmApplication.DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.DTOs
+namespace AtmApplication.Backend.DTOs
 {
     public sealed class TransactionsHistoryDto
     {

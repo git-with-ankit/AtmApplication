@@ -1,12 +1,15 @@
-namespace Frontend.Helper
+using AtmApplication.Backend.ApplicationConstants;
+
+namespace AtmApplication.Frontend.Helper
 {
-    public static class UIMessages
+    internal static class UIMessages
     {
         public const string WelcomeMessage = "   Welcome to ATM Console Application\n";
         public const string WelcomeUser = "\n--- User Portal ---";
         public const string WelcomeAdmin = "\n--- Admin Portal ---";
         public const string WelcomeSignup = "\n--- User Registration ---";
         public const string WelcomeLogin = "\n--- User Login ---";
+        public const string WelcomeAdminLogin = "\n--- Admin Login ---";
 
         public const string SelectRole = "\nSelect your role:\n1. User\n2. Admin";
         public const string UserMenu = "\n1. Sign Up\n2. Login\n3. Go Back";
@@ -15,9 +18,9 @@ namespace Frontend.Helper
         public const string AdminActionMenu = "\n1. View Frozen Accounts\n2. Unfreeze Account\n3. View ATM Balance\n4. Deposit to ATM\n5. View ATM Transactions\n6. Change Admin\n7. Exit";
 
         public const string EnterUsername = "Enter username:";
-        public const string EnterPin = "Enter PIN (4 digits):";
+        public const string EnterPin = "Enter PIN ({0} digits):";
         public const string EnterCurrentPin = "Enter current PIN:";
-        public const string EnterNewPin = "Enter new PIN (4 digits):";
+        public const string EnterNewPin = "Enter new PIN ({0} digits):";
         public const string EnterAmount = "Enter amount:";
         public const string EnterChoice = "Enter your choice:";
 
@@ -32,14 +35,14 @@ namespace Frontend.Helper
 
         public const string InvalidChoice = "Invalid choice. Please try again.";
         public const string InvalidInput = "Invalid input. Please enter a valid number.";
-        public const string InvalidUsername = "Username must be 3-20 characters and contain only letters, numbers, and underscores.";
-        public const string InvalidPin = "PIN must be exactly 4 digits.";
+        public const string InvalidUsername = "Username must be {0}-{1} characters and contain only letters, numbers, and underscores.";
+        public const string InvalidPin = "PIN must be exactly {0} digits.";
         public const string InvalidAmount = "Amount must be a positive number.";
         public const string UsernameNotFound = "Username not found.";
         public const string AccountFrozen = "Your account is frozen.";
         public const string ContactAdmin = "Please contact administrator for assistance.";
         public const string PinAttemptsExceeded = "Maximum PIN attempts exceeded. Account frozen.";
-        public const string PinMismatch = "Incorrect PIN. {0} attempt(s) remaining.";
+        public const string PinMismatch = "Incorrect PIN. {0} attempt remaining.";
         public const string NoTransactions = "No transactions found.";
         public const string NoFrozenAccounts = "No frozen accounts found.";
 

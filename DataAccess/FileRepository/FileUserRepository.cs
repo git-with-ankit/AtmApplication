@@ -1,14 +1,15 @@
-﻿using DataAccess.Entities;
+using AtmApplication.DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.Interfaces;
 
-namespace DataAccess.FileRepository
+namespace AtmApplication.DataAccess.FileRepository
 {
-    public sealed class FileUserRepository : FileRepositoryBase, IRepository<UserDetails>
+    public sealed class FileUserRepository : FileRepositoryBase, IUserRepository
     {
         public FileUserRepository() : base(FilePaths.UsersFilePath) { }
 

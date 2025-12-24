@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtmApplication.Backend.DTOs
+namespace AtmApplication.Frontend.Model
 {
-    public sealed class AtmBalanceDto
+    internal enum UserMenuOption
     {
-        public double TotalBalance { get; set; }
+        SignUp = 1,
+        Login = 2,
+        GoBack = 3
     }
 }

@@ -1,12 +1,12 @@
-using Backend.DTOs;
+using AtmApplication.Backend.DTOs;
 
 using System.Threading.Tasks;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
     public interface IIdentityService
     {
-        Task<LoginResponseDto> LoginAsync(LoginDTO loginDto);
+        Task<LoginResponseDto> LoginAsync(LoginDto loginDto);
         Task<LoginResponseDto> SignupAsync(SignupDto signupDto);
         Task<bool> ChangePinAsync(PinChangeDto pinChangeDto);
         Task<bool> FreezeAccountAsync(string username);

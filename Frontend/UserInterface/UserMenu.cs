@@ -1,18 +1,17 @@
 using System;
 using System.Threading.Tasks;
-using Backend.ApplicationConstants;
-using Backend.DTOs;
-using Backend.Exceptions;
-using Backend.Services;
-using DataAccess.Entities;
-using Frontend.Helper;
-using Frontend.Model;
-using Frontend.UserInterface;
-using Backend.ApplicationConstants;
+using AtmApplication.Backend.ApplicationConstants;
+using AtmApplication.Backend.DTOs;
+using AtmApplication.Backend.Exceptions;
+using AtmApplication.Backend.Services;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.Frontend.Helper;
+using AtmApplication.Frontend.Model;
+using AtmApplication.Frontend.UserInterface;
 
-namespace Frontend.UserInterface
+namespace AtmApplication.Frontend.UserInterface
 {
-    public class UserMenu
+    internal class UserMenu
     {
         private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
@@ -32,8 +31,7 @@ namespace Frontend.UserInterface
             _consoleUI.DisplayMessage(UIMessages.UserMenu);
             Console.Write(UIMessages.EnterChoice + " ");
 
-            int choice = InputHelper.GetIntegerInput((int)UserMenuOption.SignUp, (int)UserMenuOption.GoBack);
-            var option = (UserMenuOption)choice;
+            var option = InputHelper.GetEnumInput<UserMenuOption>();
 
             switch (option)
             {
@@ -88,7 +86,7 @@ namespace Frontend.UserInterface
                 string username = InputHelper.GetUsernameInput();
                 int pin = InputHelper.GetPinInput();
 
-                var loginDto = new LoginDTO
+                var loginDto = new LoginDto
                 {
                     Username = username,
                     Pin = pin
@@ -131,8 +129,7 @@ namespace Frontend.UserInterface
                 _consoleUI.DisplayMessage(UIMessages.UserActionMenu);
                 Console.Write(UIMessages.EnterChoice + " ");
 
-                int choice = InputHelper.GetIntegerInput((int)UserActionOption.Deposit, (int)UserActionOption.SignOut);
-                var action = (UserActionOption)choice;
+                var action = InputHelper.GetEnumInput<UserActionOption>();
 
                 bool shouldExit = false;
 
@@ -264,7 +261,7 @@ namespace Frontend.UserInterface
                 }
 
 
-                int newPin = InputHelper.GetPinInput(UIMessages.EnterNewPin);
+                int newPin = InputHelper.GetPinInput(string.Format(UIMessages.EnterNewPin, Constants.PinLength));
 
                 if (newPin == currentPin)
                 {

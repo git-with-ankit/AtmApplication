@@ -1,28 +1,28 @@
-using Backend.ApplicationConstants;
-using Backend.DTOs;
-
-using Backend.Exceptions;
-using DataAccess;
-using DataAccess.Entities;
+using AtmApplication.Backend.ApplicationConstants;
+using AtmApplication.Backend.DTOs;
+using AtmApplication.DataAccess.Interfaces;
+using AtmApplication.Backend.Exceptions;
+using AtmApplication.DataAccess;
+using AtmApplication.DataAccess.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
-    public class TransactionService : ITransactionService
+    public sealed class TransactionService : ITransactionService
     {
         private readonly IValidationService _validationService;
-        private readonly IRepository<AccountDetails> _accountRepository;
-        private readonly IRepository<AtmDetails> _atmRepository;
-        private readonly IRepository<TransactionDetails> _transactionRepository;
+        private readonly IAccountRepository _accountRepository;
+        private readonly IAtmRepository _atmRepository;
+        private readonly ITransactionRepository _transactionRepository;
 
         public TransactionService(
             IValidationService validationService,
-            IRepository<AccountDetails> accountRepository,
-            IRepository<AtmDetails> atmRepository,
-            IRepository<TransactionDetails> transactionRepository)
+            IAccountRepository accountRepository,
+            IAtmRepository atmRepository,
+            ITransactionRepository transactionRepository)
         {
             _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
             _accountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));
@@ -212,21 +212,13 @@ namespace Backend.Services
             
             if (atmDetails == null)
             {
-                // Create new ATM record if it doesn't exist
-                atmDetails = new AtmDetails
-                {
-                    AdminUsername = dto.AdminUsername,
-                    TotalBalance = dto.Amount
-                };
-                await _atmRepository.AddDataAsync(atmDetails);
+                throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
             }
-            else
-            {
-                // Update balance and current admin
-                atmDetails.TotalBalance += dto.Amount;
-                atmDetails.AdminUsername = dto.AdminUsername;
-                await _atmRepository.UpdateDataAsync(atmDetails);
-            }
+
+            // Update balance and current admin
+            atmDetails.TotalBalance += dto.Amount;
+            atmDetails.AdminUsername = dto.AdminUsername;
+            await _atmRepository.UpdateDataAsync(atmDetails);
 
             // Record admin transaction
             var transaction = new TransactionDetails

@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frontend", "Frontend\Frontend.csproj", "{B37F976D-894D-4C63-9C40-77F8BFD2425F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtmApplication.ConsoleUI", "Frontend\AtmApplication.ConsoleUI.csproj", "{B37F976D-894D-4C63-9C40-77F8BFD2425F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "Backend\Backend.csproj", "{6B91AB5B-910F-48AB-A009-1AEC7133A7A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtmApplication.Backend", "Backend\AtmApplication.Backend.csproj", "{6B91AB5B-910F-48AB-A009-1AEC7133A7A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{2913C054-091D-4FA5-B44E-823210A20777}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtmApplication.DataAccess", "DataAccess\AtmApplication.DataAccess.csproj", "{2913C054-091D-4FA5-B44E-823210A20777}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

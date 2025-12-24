@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DataAccess.ApplicationConstants;
-using DataAccess.Entities;
+using AtmApplication.DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.Entities;
 
-namespace DataAccess.FileRepository
+namespace AtmApplication.DataAccess.FileRepository
 {
     public abstract class FileRepositoryBase
     {
-        private string _filePath;
+        private readonly string _filePath;
 
         protected FileRepositoryBase(string filePath)
         {
@@ -18,7 +18,7 @@ namespace DataAccess.FileRepository
             EnsureFilePathExists(filePath);
         }
 
-        protected void EnsureFilePathExists(string filePath)
+        private void EnsureFilePathExists(string filePath)
         {
             string directory = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directory))

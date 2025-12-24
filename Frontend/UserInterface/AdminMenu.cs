@@ -1,16 +1,16 @@
 using System;
 using System.Threading.Tasks;
-using Backend.DTOs;
-using Backend.Exceptions;
-using Backend.Services;
-using DataAccess.Entities;
-using Frontend.Helper;
-using Frontend.Model;
-using Frontend.UserInterface;
+using AtmApplication.Backend.DTOs;
+using AtmApplication.Backend.Exceptions;
+using AtmApplication.Backend.Services;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.Frontend.Helper;
+using AtmApplication.Frontend.Model;
+using AtmApplication.Frontend.UserInterface;
 
-namespace Frontend.UserInterface
+namespace AtmApplication.Frontend.UserInterface
 {
-    public class AdminMenu
+    internal sealed class AdminMenu
     {
         private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
@@ -29,9 +29,9 @@ namespace Frontend.UserInterface
             _consoleUI.DisplayMessage(UIMessages.AdminMenu);
             Console.Write(UIMessages.EnterChoice + " ");
 
-            int choice = InputHelper.GetIntegerInput(1, 2);
+            var choice = InputHelper.GetEnumInput<AdminMenuOption>();
             
-            if (choice == 1)
+            if (choice == AdminMenuOption.Login)
             {
                 await HandleAdminLoginAsync();
             }
@@ -41,12 +41,12 @@ namespace Frontend.UserInterface
         {
             try
             {
-                _consoleUI.DisplayMessage(UIMessages.WelcomeLogin);
+                _consoleUI.DisplayMessage(UIMessages.WelcomeAdminLogin);
                 
                 string username = InputHelper.GetUsernameInput();
                 int pin = InputHelper.GetPinInput();
 
-                var loginDto = new LoginDTO
+                var loginDto = new LoginDto
                 {
                     Username = username,
                     Pin = pin
@@ -76,8 +76,7 @@ namespace Frontend.UserInterface
                 _consoleUI.DisplayMessage(UIMessages.AdminActionMenu);
                 Console.Write(UIMessages.EnterChoice + " ");
 
-                int choice = InputHelper.GetIntegerInput((int)AdminActionOption.ViewFrozenAccounts, (int)AdminActionOption.Exit);
-                var action = (AdminActionOption)choice;
+                var action = InputHelper.GetEnumInput<AdminActionOption>();
 
                 switch (action)
                 {

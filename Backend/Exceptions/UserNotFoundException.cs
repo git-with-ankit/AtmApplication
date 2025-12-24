@@ -1,7 +1,7 @@
-﻿using Backend.ApplicationConstants;
+using AtmApplication.Backend.ApplicationConstants;
 using System;
 
-namespace Backend.Exceptions
+namespace AtmApplication.Backend.Exceptions
 {
     public class UserNotFoundException : ServiceException
     {

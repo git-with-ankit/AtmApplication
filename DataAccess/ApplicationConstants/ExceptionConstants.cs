@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.ApplicationConstants
+namespace AtmApplication.DataAccess.ApplicationConstants
 {
-    internal class ExceptionConstants
+    internal static class ExceptionConstants
     {
         public const string UserAlreadyExists = "User '{0}' already exists";
         public const string AccountAlreadyExists = "Account for '{0}' already exists";

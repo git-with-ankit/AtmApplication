@@ -1,8 +1,8 @@
-using DataAccess;
-using DataAccess.Entities;
-using Backend.Exceptions;
+using AtmApplication.DataAccess;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.Backend.Exceptions;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
     public interface IValidationService
     {

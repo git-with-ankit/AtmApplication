@@ -1,7 +1,7 @@
-﻿using Frontend.Dependencies;
+using AtmApplication.Frontend.Dependencies;
 using System.Threading.Tasks;
 
-namespace Frontend
+namespace AtmApplication.Frontend
 {
     internal class Program
     {

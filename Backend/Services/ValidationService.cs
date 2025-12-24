@@ -1,17 +1,18 @@
-using DataAccess;
-using DataAccess.Entities;
-using Backend.ApplicationConstants;
+using AtmApplication.DataAccess;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.Backend.ApplicationConstants;
+using AtmApplication.DataAccess.Interfaces;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
-    public class ValidationService : IValidationService
+    public sealed class ValidationService : IValidationService
     {
-        private readonly IRepository<UserDetails> _userRepository;
-        private readonly IRepository<AccountDetails> _accountRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IAccountRepository _accountRepository;
 
         public ValidationService(
-            IRepository<UserDetails> userRepository,
-            IRepository<AccountDetails> accountRepository)
+            IUserRepository userRepository,
+            IAccountRepository accountRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _accountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));

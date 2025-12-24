@@ -1,27 +1,28 @@
-using Backend.DTOs;
-using Backend.ApplicationConstants;
-using Backend.Exceptions;
-using DataAccess;
-using DataAccess.Entities;
+using AtmApplication.Backend.DTOs;
+using AtmApplication.Backend.ApplicationConstants;
+using AtmApplication.Backend.Exceptions;
+using AtmApplication.DataAccess;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.Interfaces;    
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Backend.Services
+namespace AtmApplication.Backend.Services
 {
-    public class IdentityService : IIdentityService
+    public sealed class IdentityService : IIdentityService
     {
         private readonly IValidationService _validationService;
-        private readonly IRepository<UserDetails> _userRepository;
-        private readonly IRepository<AccountDetails> _accountRepository;
-        private readonly IRepository<AtmDetails> _atmRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IAccountRepository _accountRepository;
+        private readonly IAtmRepository _atmRepository;
 
         public IdentityService(
             IValidationService validationService,
-            IRepository<UserDetails> userRepository,
-            IRepository<AccountDetails> accountRepository,
-            IRepository<AtmDetails> atmRepository)
+            IUserRepository userRepository,
+            IAccountRepository accountRepository,
+            IAtmRepository atmRepository)
         {
             _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -29,7 +30,7 @@ namespace Backend.Services
             _atmRepository = atmRepository ?? throw new ArgumentNullException(nameof(atmRepository));
         }
 
-        public async Task<LoginResponseDto> LoginAsync(LoginDTO loginDto)
+        public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
         {
             var user = await _userRepository.GetDataByUsernameAsync(loginDto.Username);
             
@@ -167,7 +168,6 @@ namespace Backend.Services
                 throw new UserNotFoundException();
             }
 
-            // Check if account is actually frozen
             if (!user.IsFreezed)
             {
                 throw new InvalidOperationException(ExceptionMessages.AccountNotFrozen);

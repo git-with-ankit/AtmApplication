@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.ApplicationConstants
+namespace AtmApplication.DataAccess.ApplicationConstants
 {
-    internal class DefaultConstants
+    internal static class DefaultConstants
     {
         public const string AdminUsername = "Admin123";
         public const int AdminPin = 1234;

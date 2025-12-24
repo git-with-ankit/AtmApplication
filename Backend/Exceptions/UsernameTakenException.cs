@@ -1,11 +1,11 @@
-﻿using Backend.ApplicationConstants;
+using AtmApplication.Backend.ApplicationConstants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.Exceptions
+namespace AtmApplication.Backend.Exceptions
 {
     public class UsernameTakenException : ServiceException
     {

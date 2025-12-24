@@ -1,4 +1,4 @@
-namespace Backend.ApplicationConstants
+namespace AtmApplication.Backend.ApplicationConstants
 {
     public static class ExceptionMessages
     {

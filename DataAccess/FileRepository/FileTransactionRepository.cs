@@ -1,5 +1,6 @@
-﻿using DataAccess.ApplicationConstants;
-using DataAccess.Entities;
+using AtmApplication.DataAccess.ApplicationConstants;
+using AtmApplication.DataAccess.Entities;
+using AtmApplication.DataAccess.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,9 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess.FileRepository
+namespace AtmApplication.DataAccess.FileRepository
 {
-    public class FileTransactionRepository : FileRepositoryBase, IRepository<TransactionDetails>
+    public class FileTransactionRepository : FileRepositoryBase, ITransactionRepository
     {
         public FileTransactionRepository() : base(FilePaths.TransactionsFilePath) { }
         public async Task AddDataAsync(TransactionDetails transaction)
@@ -33,32 +34,6 @@ namespace DataAccess.FileRepository
             return transactionRecords.FirstOrDefault(t => t.UserName.Equals(username));
         }
 
-        public async Task UpdateDataAsync(TransactionDetails transaction)
-        {
-            var transactionRecords = await GetAllDataAsync();
-            var updatedTransactions = transactionRecords
-                .Select(record =>
-                {
-                    if (record.UserName.Equals(transaction.UserName) && record.TimeStamp.Equals(transaction.TimeStamp))
-                    {
-                        return transaction;
-                    }
-                    return record;
-                })
-                .ToList();
-
-            await SaveAllDataAsync(updatedTransactions);
-        }
-
-        public async Task DeleteDataByUsernameAsync(string username)
-        {
-            var transactionRecords = await GetAllDataAsync();
-            var remainingTransactions = transactionRecords
-                .Where(record => !record.UserName.Equals(username))
-                .ToList();
-            await SaveAllDataAsync(remainingTransactions);
-        }
-
         public async Task<List<TransactionDetails>> GetTransactionsByUsernameAsync(string username, int count)
         {
             var transactionRecords = await GetAllDataAsync();
@@ -67,14 +42,14 @@ namespace DataAccess.FileRepository
                 .OrderByDescending(t => t.TimeStamp)                        
                 .ToList();
         }
-        public async Task<List<TransactionDetails>> GetLastTransactionsAsync(int count)
-        {
-            var transactionRecords = await GetAllDataAsync();
-            return transactionRecords
-                .OrderByDescending(t => t.TimeStamp)
-                .Take(count)
-                .ToList();
-        }
+        //public async Task<List<TransactionDetails>> GetLastTransactionsAsync(int count)
+        //{
+        //    var transactionRecords = await GetAllDataAsync();
+        //    return transactionRecords
+        //        .OrderByDescending(t => t.TimeStamp)
+        //        .Take(count)
+        //        .ToList();
+        //}
         private TransactionDetails ParseTransactionDetails(string record)
         {
             var values = record.Split(',');
