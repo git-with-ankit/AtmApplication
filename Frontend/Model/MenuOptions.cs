@@ -30,6 +30,7 @@ namespace Frontend.Model
         ViewAtmBalance = 3,
         DepositToAtm = 4,
         ViewAtmTransactions = 5,
-        Exit = 6
+        ChangeAdmin = 6,
+        Exit = 7
     }
 }

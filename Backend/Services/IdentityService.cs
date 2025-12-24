@@ -1,5 +1,5 @@
 using Backend.DTOs;
-
+using Backend.ApplicationConstants;
 using Backend.Exceptions;
 using DataAccess;
 using DataAccess.Entities;
@@ -15,51 +15,46 @@ namespace Backend.Services
         private readonly IValidationService _validationService;
         private readonly IRepository<UserDetails> _userRepository;
         private readonly IRepository<AccountDetails> _accountRepository;
-        private readonly Dictionary<string, int> _loginAttempts = new();
-        private const int MaxLoginAttempts = 3;
+        private readonly IRepository<AtmDetails> _atmRepository;
 
         public IdentityService(
             IValidationService validationService,
             IRepository<UserDetails> userRepository,
-            IRepository<AccountDetails> accountRepository)
+            IRepository<AccountDetails> accountRepository,
+            IRepository<AtmDetails> atmRepository)
         {
-            _validationService = validationService;
-            _userRepository = userRepository;
-            _accountRepository = accountRepository;
+            _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _accountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));
+            _atmRepository = atmRepository ?? throw new ArgumentNullException(nameof(atmRepository));
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginDTO loginDto)
         {
             var user = await _userRepository.GetDataByUsernameAsync(loginDto.Username);
             
-            if (user == null)
+            if (user is null)
             {
                 return new LoginResponseDto
                 {
                     Username = string.Empty,
-                    Role = UserRole.User,
+                    IsAdmin = false,
                     IsLoginSuccessful = false,
                     IsFrozen = false
                 };
             }
 
-            // Check if account is frozen
             if (user.IsFreezed)
             {
                 throw new AccountFrozenException();
             }
-
-            // Check if PIN matches
             if (user.Pin != loginDto.Pin)
             {
-                // Track failed login attempts
-                _loginAttempts.TryGetValue(loginDto.Username, out int attempts);
-                attempts++;
-                _loginAttempts[loginDto.Username] = attempts;
+                user.FailedLoginAttempts++;
+                await _userRepository.UpdateDataAsync(user);
 
-                if (attempts >= MaxLoginAttempts)
+                if (user.FailedLoginAttempts >= Constants.MaxPinAttempts)
                 {
-                    // Freeze account after 3 failed attempts
                     user.IsFreezed = true;
                     await _userRepository.UpdateDataAsync(user);
                     throw new ExceededPinAttemptsException();
@@ -68,46 +63,43 @@ namespace Backend.Services
                 return new LoginResponseDto
                 {
                     Username = string.Empty,
-                    Role = UserRole.User,
+                    IsAdmin = false,
                     IsLoginSuccessful = false,
                     IsFrozen = false,
-                    Message = $"Invalid PIN. {MaxLoginAttempts - attempts} attempts remaining."
+                    Message = $"Invalid PIN. {Constants.MaxPinAttempts - user.FailedLoginAttempts} attempts remaining."
                 };
             }
 
-            // Successful login - clear attempts
-            _loginAttempts.Remove(loginDto.Username);
+            user.FailedLoginAttempts = 0;
+            await _userRepository.UpdateDataAsync(user);
 
             return new LoginResponseDto
             {
                 Username = user.Username,
-                Role = user.Role,
+                IsAdmin = user.IsAdmin,
                 IsLoginSuccessful = true,
                 IsFrozen = false
             };
-        }
-
+        } 
+         
         public async Task<LoginResponseDto> SignupAsync(SignupDto signupDto)
         {
-            // Check if username already exists
             var existingUser = await _userRepository.GetDataByUsernameAsync(signupDto.Username);
             if (existingUser != null)
             {
                 throw new UsernameTakenException();
             }
 
-            // Create new user
             var newUser = new UserDetails
             {
                 Username = signupDto.Username,
                 Pin = signupDto.Pin,
-                Role = signupDto.Role,
+                IsAdmin = false,
                 IsFreezed = false
             };
 
             await _userRepository.AddDataAsync(newUser);
 
-            // Create account with zero balance
             var newAccount = new AccountDetails
             {
                 Username = signupDto.Username,
@@ -119,7 +111,7 @@ namespace Backend.Services
             return new LoginResponseDto
             {
                 Username = newUser.Username,
-                Role = newUser.Role,
+                IsAdmin = newUser.IsAdmin,
                 IsLoginSuccessful = true,
                 IsFrozen = false
             };
@@ -133,13 +125,11 @@ namespace Backend.Services
                 return false;
             }
 
-            // Verify current PIN
             if (user.Pin != pinChangeDto.CurrentPin)
             {
                 return false;
             }
 
-            // Update to new PIN
             user.Pin = pinChangeDto.NewPin;
             await _userRepository.UpdateDataAsync(user);
 
@@ -147,15 +137,18 @@ namespace Backend.Services
         }
 
 
-        public async Task<bool> FreezeAccountAsync(string username, string adminUsername)
+        public async Task<bool> FreezeAccountAsync(string username)
         {
-            // Validate admin
-            await _validationService.ValidateAdminAsync(adminUsername);
-
             var user = await _userRepository.GetDataByUsernameAsync(username);
             if (user == null)
             {
-                return false;
+                throw new UserNotFoundException();
+            }
+
+            // CRITICAL: Never freeze admin accounts - if admin is frozen, application becomes unusable
+            if (user.IsAdmin)
+            {
+                throw new AdminFreezeException();
             }
 
             user.IsFreezed = true;
@@ -166,43 +159,42 @@ namespace Backend.Services
 
         public async Task<bool> UnfreezeAccountAsync(UnfreezeUserDto dto)
         {
-            // Validate admin
             await _validationService.ValidateAdminAsync(dto.AdminUsername);
 
             var user = await _userRepository.GetDataByUsernameAsync(dto.Username);
             if (user == null)
             {
-                return false;
+                throw new UserNotFoundException();
+            }
+
+            // Check if account is actually frozen
+            if (!user.IsFreezed)
+            {
+                throw new InvalidOperationException(ExceptionMessages.AccountNotFrozen);
             }
 
             user.IsFreezed = false;
+            user.FailedLoginAttempts = 0; // Reset failed attempts when unfreezing
             await _userRepository.UpdateDataAsync(user);
-
-            // Clear login attempts when unfreezing
-            _loginAttempts.Remove(dto.Username);
 
             return true;
         }
 
         public async Task<UserListDto> GetFrozenAccountsAsync(string adminUsername)
         {
-            // Validate admin
             await _validationService.ValidateAdminAsync(adminUsername);
 
             var allUsers = await _userRepository.GetAllDataAsync();
             var frozenUsers = allUsers.Where(u => u.IsFreezed).ToList();
-
-            // For simplicity, returning the first frozen user
-            // In a real scenario, you might want to return a list
             if (frozenUsers.Any())
             {
-                var firstFrozen = frozenUsers.First();
+                var firstFrozen = frozenUsers.First();//return the list of frozen users
                 var account = await _accountRepository.GetDataByUsernameAsync(firstFrozen.Username);
 
                 return new UserListDto
                 {
                     Username = firstFrozen.Username,
-                    Role = firstFrozen.Role,
+                    IsAdmin = firstFrozen.IsAdmin,
                     IsLoginSuccessful = !firstFrozen.IsFreezed,
                     IsFrozen = firstFrozen.IsFreezed,
                     Balance = account != null ? account.Balance : 0
@@ -212,11 +204,53 @@ namespace Backend.Services
             return new UserListDto
             {
                 Username = string.Empty,
-                Role = UserRole.User,
+                IsAdmin = false,
                 IsLoginSuccessful = false,
                 IsFrozen = false,
                 Balance = 0
             };
+        }
+
+        public async Task<bool> ChangeAdminAsync(ChangeAdminDto dto)
+        {
+            await _validationService.ValidateAdminAsync(dto.CurrentAdminUsername);
+
+            var currentAdmin = await _userRepository.GetDataByUsernameAsync(dto.CurrentAdminUsername);
+            if (currentAdmin == null || !currentAdmin.IsAdmin)
+            {
+                return false;
+            }
+
+            // Check if new admin username is already taken
+            var existingUser = await _userRepository.GetDataByUsernameAsync(dto.NewAdminUsername);
+            if (existingUser != null)
+            {
+                throw new UsernameTakenException();
+            }
+
+            // Delete old admin user record (admins don't have accounts, so no need to delete from AccountRepository)
+            await _userRepository.DeleteDataByUsernameAsync(dto.CurrentAdminUsername);
+
+            // Create NEW admin user (not promoting existing user)
+            var newAdmin = new UserDetails
+            {
+                Username = dto.NewAdminUsername,
+                Pin = dto.NewAdminPin,
+                IsAdmin = true,
+                IsFreezed = false,
+                FailedLoginAttempts = 0
+            };
+            await _userRepository.AddDataAsync(newAdmin);
+
+            // Update ATM admin username
+            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
+            if (atmDetails != null)
+            {
+                atmDetails.AdminUsername = dto.NewAdminUsername;
+                await _atmRepository.UpdateDataAsync(atmDetails);
+            }
+
+            return true;
         }
     }
 }

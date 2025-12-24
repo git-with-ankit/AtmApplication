@@ -1,12 +1,9 @@
 using DataAccess;
 using DataAccess.Entities;
-using Backend.Exceptions;
+using Backend.ApplicationConstants;
 
 namespace Backend.Services
 {
-    /// <summary>
-    /// Implementation of validation service for centralized validation logic.
-    /// </summary>
     public class ValidationService : IValidationService
     {
         private readonly IRepository<UserDetails> _userRepository;
@@ -16,25 +13,19 @@ namespace Backend.Services
             IRepository<UserDetails> userRepository,
             IRepository<AccountDetails> accountRepository)
         {
-            _userRepository = userRepository;
-            _accountRepository = accountRepository;
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _accountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));
         }
 
-        /// <summary>
-        /// Validates that the specified user is an admin.
-        /// </summary>
         public async Task ValidateAdminAsync(string username)
         {
             var user = await _userRepository.GetDataByUsernameAsync(username);
-            if (user == null || user.Role != UserRole.Admin)
+            if (user == null || !user.IsAdmin)
             {
                 throw new UnauthorizedAccessException(ExceptionMessages.UnauthorizedAccess);
             }
         }
 
-        /// <summary>
-        /// Validates that an account exists for the specified username.
-        /// </summary>
         public async Task ValidateAccountExistsAsync(string username)
         {
             var account = await _accountRepository.GetDataByUsernameAsync(username);
@@ -45,9 +36,6 @@ namespace Backend.Services
             }
         }
 
-        /// <summary>
-        /// Validates that a user exists with the specified username.
-        /// </summary>
         public async Task ValidateUserExistsAsync(string username)
         {
             var user = await _userRepository.GetDataByUsernameAsync(username);

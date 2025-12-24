@@ -103,7 +103,7 @@ namespace DataAccess.FileRepository
         private async Task SaveAllDataAsync(List<AccountDetails> accountRecords)
         {
             var lines = accountRecords
-                .Select(record => $"{record.Username};{record.Balance:0.00}")
+                .Select(record => $"{record.Username},{record.Balance:0.00}")
                 .ToArray();
             await WriteAllLinesAsync(lines);
         }

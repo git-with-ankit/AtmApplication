@@ -14,7 +14,7 @@ namespace Frontend.UserInterface
         public void DisplayError(string error)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"✗ {error}");
+            Console.WriteLine(error);
             Console.ResetColor();
         }
 
@@ -49,7 +49,9 @@ namespace Frontend.UserInterface
             foreach (var transaction in history.Transactions)
             {
                 string typeSymbol = transaction.Type == TransactionType.Credit ? "+" : "-";
-                Console.WriteLine($"{transaction.Timestamp:yyyy-MM-dd HH:mm:ss} | {typeSymbol}${transaction.Amount:F2} | Balance: ${transaction.NewBalance:F2}");
+                var localTime = transaction.Timestamp.ToLocalTime();
+                string adminIndicator = transaction.IsAdminTransaction ? " [ADMIN]" : "";
+                Console.WriteLine($"{localTime:yyyy-MM-dd HH:mm:ss} | {transaction.Username}{adminIndicator} | {typeSymbol}${transaction.Amount:F2} | Balance: ${transaction.NewBalance:F2}");
             }
         }
 

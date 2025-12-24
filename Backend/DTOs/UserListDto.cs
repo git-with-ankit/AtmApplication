@@ -10,7 +10,7 @@ namespace Backend.DTOs
     public sealed class UserListDto
     {
         public string Username { get; set; } = string.Empty;
-        public UserRole Role { get; set; }
+        public bool IsAdmin { get; set; }
         public bool IsLoginSuccessful { get; set; }
         public bool IsFrozen { get; set; }
         public double Balance { get; set; }

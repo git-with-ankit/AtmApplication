@@ -15,16 +15,15 @@ namespace Frontend.UserInterface
         private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
         private readonly ITransactionService _transactionService;
-        private const int MaxPinAttempts = 3;
 
         public AdminMenu(ConsoleUI consoleUI, IIdentityService identityService, ITransactionService transactionService)
         {
             _consoleUI = consoleUI;
-            _identityService = identityService;
-            _transactionService = transactionService;
+            _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
+            _transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
         }
 
-        public async Task HandleAdminFlowAsync()
+        public async Task HandleAdminMenuAsync()
         {
             _consoleUI.DisplayMessage(UIMessages.WelcomeAdmin);
             _consoleUI.DisplayMessage(UIMessages.AdminMenu);
@@ -55,7 +54,7 @@ namespace Frontend.UserInterface
 
                 var result = await _identityService.LoginAsync(loginDto);
 
-                if (!result.IsLoginSuccessful || result.Role != UserRole.Admin)
+                if (!result.IsLoginSuccessful || !result.IsAdmin)
                 {
                     _consoleUI.DisplayError("Invalid admin credentials.");
                     return;
@@ -97,6 +96,9 @@ namespace Frontend.UserInterface
                     case AdminActionOption.ViewAtmTransactions:
                         await HandleViewAtmTransactionsAsync(adminUsername);
                         break;
+                    case AdminActionOption.ChangeAdmin:
+                        await HandleChangeAdminAsync(adminUsername);
+                        return; // Exit after changing admin
                     case AdminActionOption.Exit:
                         _consoleUI.DisplayMessage(UIMessages.Exiting);
                         return;
@@ -208,7 +210,7 @@ namespace Frontend.UserInterface
         {
             try
             {
-                var history = await _transactionService.GetTransactionHistoryAsync(adminUsername, 5);
+                var history = await _transactionService.GetTransactionHistoryAsync(adminUsername, Backend.ApplicationConstants.Constants.DefaultTransactionHistoryCount);
                 _consoleUI.DisplayMessage("\n--- Last 5 ATM Transactions ---");
                 _consoleUI.DisplayTransactionHistory(history);
             }
@@ -219,6 +221,46 @@ namespace Frontend.UserInterface
             catch (Exception ex)
             {
                 _consoleUI.DisplayError($"Failed to retrieve ATM transactions: {ex.Message}");
+            }
+        }
+
+        private async Task HandleChangeAdminAsync(string adminUsername)
+        {
+            try
+            {
+                _consoleUI.DisplayMessage("\n--- Change Admin ---");
+                _consoleUI.DisplayMessage("WARNING: You will lose admin privileges after this operation!");
+                
+                string newAdminUsername = InputHelper.GetUsernameInput();
+                int newAdminPin = InputHelper.GetPinInput();
+
+                var changeAdminDto = new ChangeAdminDto
+                {
+                    CurrentAdminUsername = adminUsername,
+                    NewAdminUsername = newAdminUsername,
+                    NewAdminPin = newAdminPin
+                };
+
+                bool success = await _identityService.ChangeAdminAsync(changeAdminDto);
+                
+                if (success)
+                {
+                    _consoleUI.DisplaySuccess(UIMessages.ChangeAdminSuccess);
+                    _consoleUI.DisplayMessage($"New admin: {newAdminUsername}");
+                    _consoleUI.DisplayMessage("You have been logged out.");
+                }
+                else
+                {
+                    _consoleUI.DisplayError("Failed to change admin. User not found or invalid operation.");
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _consoleUI.DisplayError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _consoleUI.DisplayError($"Change admin operation failed: {ex.Message}");
             }
         }
     }

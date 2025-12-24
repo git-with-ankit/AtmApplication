@@ -7,8 +7,16 @@ namespace Frontend
     {
         static async Task Main(string[] args)
         {
-            var sharedFlow = new SharedFlow();
-            await sharedFlow.MainMenu.RunAsync();
+            var app = new AtmApp();
+            await app.MainMenu.RunAsync();
         }
     }
-}
+}//atm interface separate 
+//backend code review
+//ui exception handling
+//access modifiers
+//comments
+//factory service
+//input doing validation
+//dto change , input validation change
+//freeze bug

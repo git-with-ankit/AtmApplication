@@ -1,4 +1,6 @@
 using System;
+using Backend.ApplicationConstants;
+using Backend.ApplicationConstants;
 
 namespace Frontend.Helper
 {
@@ -26,12 +28,17 @@ namespace Frontend.Helper
 
         public static int GetPinInput()
         {
+            return GetPinInput(UIMessages.EnterPin);
+        }
+
+        public static int GetPinInput(string prompt)
+        {
             while (true)
             {
-                Console.Write(UIMessages.EnterPin + " ");
+                Console.Write(prompt + " ");
                 string input = Console.ReadLine()?.Trim() ?? string.Empty;
                 
-                if (int.TryParse(input, out int pin) && input.Length == 4)
+                if (int.TryParse(input, out int pin) && input.Length == Constants.PinLength)
                 {
                     return pin;
                 }

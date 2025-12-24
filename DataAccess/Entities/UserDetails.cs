@@ -10,8 +10,8 @@ namespace DataAccess.Entities
     {
         public string Username { get; set; }
         public int Pin { get; set; }
-        public UserRole Role { get; set; }
+        public bool IsAdmin { get; set; }
         public bool IsFreezed { get; set; }
-        public bool IsAdmin { get; set; }  // Indicates if this user is the current admin
+        public int FailedLoginAttempts { get; set; } = 0;
     }
 }

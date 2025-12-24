@@ -29,8 +29,13 @@ namespace DataAccess.FileRepository
             {
                 if(filePath == FilePaths.UsersFilePath)
                 {
-                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},{UserRole.Admin},False";
+                    string adminLine = $"{DefaultConstants.AdminUsername},{DefaultConstants.AdminPin},True,False,0";
                     File.WriteAllText(filePath, adminLine);
+                }
+                else if(filePath == FilePaths.AtmFilePath)
+                {
+                    string atmLine = $"{DefaultConstants.AdminUsername},0.00";
+                    File.WriteAllText(filePath, atmLine);
                 }
                 else
                 {

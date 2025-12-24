@@ -14,9 +14,9 @@ namespace Frontend.UserInterface
 
         public MainMenu(ConsoleUI consoleUI, UserMenu userMenu, AdminMenu adminMenu)
         {
-            _consoleUI = consoleUI;
-            _userMenu = userMenu;
-            _adminMenu = adminMenu;
+            _consoleUI = consoleUI ?? throw new ArgumentNullException(nameof(consoleUI));
+            _userMenu = userMenu ?? throw new ArgumentNullException(nameof(userMenu));
+            _adminMenu = adminMenu ?? throw new ArgumentNullException(nameof(adminMenu));
         }
 
         public async Task RunAsync()
@@ -41,10 +41,10 @@ namespace Frontend.UserInterface
             switch (role)
             {
                 case RoleOption.User:
-                    await _userMenu.HandleUserFlowAsync();
+                    await _userMenu.HandleUserMenuAsync();
                     break;
                 case RoleOption.Admin:
-                    await _adminMenu.HandleAdminFlowAsync();
+                    await _adminMenu.HandleAdminMenuAsync();
                     break;
             }
         }

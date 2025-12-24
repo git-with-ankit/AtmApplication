@@ -67,7 +67,7 @@ namespace DataAccess.FileRepository
         private UserDetails ParseUserDetails(string record)
         {
             var values = record.Split(',');
-            if(values.Length != 4)
+            if(values.Length != 5)
             {
                 throw new FormatException(ExceptionConstants.InvalidUserDetailsFormat);
             }
@@ -75,15 +75,16 @@ namespace DataAccess.FileRepository
             {
                 Username = values[0],
                 Pin = int.Parse(values[1]),
-                Role = Enum.Parse<UserRole>(values[2]),
-                IsFreezed = bool.Parse(values[3])
+                IsAdmin = bool.Parse(values[2]),
+                IsFreezed = bool.Parse(values[3]),
+                FailedLoginAttempts = int.Parse(values[4])
             };
         }
 
         private async Task SaveAllDataAsync(List<UserDetails> userRecords)
         {
             var lines = userRecords
-                            .Select(record => $"{record.Username},{record.Pin},{record.Role},{record.IsFreezed}")
+                            .Select(record => $"{record.Username},{record.Pin},{record.IsAdmin},{record.IsFreezed},{record.FailedLoginAttempts}")
                             .ToArray();
             await WriteAllLinesAsync(lines);
         }

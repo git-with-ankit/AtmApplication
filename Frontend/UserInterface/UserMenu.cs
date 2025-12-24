@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Backend.ApplicationConstants;
 using Backend.DTOs;
 using Backend.Exceptions;
 using Backend.Services;
@@ -7,6 +8,7 @@ using DataAccess.Entities;
 using Frontend.Helper;
 using Frontend.Model;
 using Frontend.UserInterface;
+using Backend.ApplicationConstants;
 
 namespace Frontend.UserInterface
 {
@@ -15,16 +17,16 @@ namespace Frontend.UserInterface
         private readonly ConsoleUI _consoleUI;
         private readonly IIdentityService _identityService;
         private readonly ITransactionService _transactionService;
-        private const int MaxPinAttempts = 3;
 
-        public UserMenu(ConsoleUI consoleUI, IIdentityService identityService, ITransactionService transactionService)
+        public UserMenu(
+            ConsoleUI consoleUI, IIdentityService identityService, ITransactionService transactionService)
         {
             _consoleUI = consoleUI;
-            _identityService = identityService;
-            _transactionService = transactionService;
+            _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
+            _transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
         }
 
-        public async Task HandleUserFlowAsync()
+        public async Task HandleUserMenuAsync()
         {
             _consoleUI.DisplayMessage(UIMessages.WelcomeUser);
             _consoleUI.DisplayMessage(UIMessages.UserMenu);
@@ -59,13 +61,12 @@ namespace Frontend.UserInterface
                 {
                     Username = username,
                     Pin = pin,
-                    Role = UserRole.User
+                    IsAdmin = false
                 };
 
                 var result = await _identityService.SignupAsync(signupDto);
                 _consoleUI.DisplaySuccess(UIMessages.SignupSuccess);
                 
-                // Auto-login after signup
                 await HandleUserActionsAsync(username, pin);
             }
             catch (UsernameTakenException ex)
@@ -168,9 +169,8 @@ namespace Frontend.UserInterface
                 double amount = InputHelper.GetAmountInput();
 
                 // Verify PIN before transaction
-                if (!VerifyPinWithAttempts(userPin))
+                if (!await VerifyPinWithAttemptsAsync(userPin, username))
                 {
-                    await FreezeAccountAsync(username);
                     return false;
                 }
 
@@ -201,9 +201,8 @@ namespace Frontend.UserInterface
                 double amount = InputHelper.GetAmountInput();
 
                 // Verify PIN before transaction
-                if (!VerifyPinWithAttempts(userPin))
+                if (!await VerifyPinWithAttemptsAsync(userPin, username))
                 {
-                    await FreezeAccountAsync(username);
                     return false;
                 }
 
@@ -237,9 +236,8 @@ namespace Frontend.UserInterface
             try
             {
                 // Verify PIN before showing balance
-                if (!VerifyPinWithAttempts(userPin))
+                if (!await VerifyPinWithAttemptsAsync(userPin, username))
                 {
-                    await FreezeAccountAsync(username);
                     return false;
                 }
 
@@ -260,15 +258,13 @@ namespace Frontend.UserInterface
         {
             try
             {
-                // Verify current PIN
-                if (!VerifyPinWithAttempts(currentPin))
+                if (!await VerifyPinWithAttemptsAsync(currentPin, username))
                 {
-                    await FreezeAccountAsync(username);
                     return false;
                 }
 
-                Console.Write(UIMessages.EnterNewPin + " ");
-                int newPin = InputHelper.GetPinInput();
+
+                int newPin = InputHelper.GetPinInput(UIMessages.EnterNewPin);
 
                 if (newPin == currentPin)
                 {
@@ -317,13 +313,12 @@ namespace Frontend.UserInterface
             }
         }
 
-        private bool VerifyPinWithAttempts(int correctPin)
+        private async Task<bool> VerifyPinWithAttemptsAsync(int correctPin, string username)
         {
-            int attempts = MaxPinAttempts;
+            int attempts = Constants.MaxPinAttempts;
 
             while (attempts > 0)
             {
-                Console.Write(UIMessages.EnterPin + " ");
                 int enteredPin = InputHelper.GetPinInput();
 
                 if (enteredPin == correctPin)
@@ -339,15 +334,15 @@ namespace Frontend.UserInterface
             }
 
             _consoleUI.DisplayError(UIMessages.PinAttemptsExceeded);
+            await HandleFreezeAccountAsync(username);
             return false;
         }
 
-        private async Task FreezeAccountAsync(string username)
+        private async Task HandleFreezeAccountAsync(string username)
         {
             try
             {
-                // Note: In real implementation, this would need admin username
-                // For now, we'll just display the message
+                await _identityService.FreezeAccountAsync(username);
                 _consoleUI.DisplayError(UIMessages.AccountFrozen);
                 _consoleUI.DisplayMessage(UIMessages.ContactAdmin);
             }

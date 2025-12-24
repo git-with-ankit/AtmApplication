@@ -11,6 +11,6 @@ namespace Backend.DTOs
     {
         public string Username { get; set; }
         public int Pin { get; set; }
-        public UserRole Role { get; set; } = UserRole.User;
+        public bool IsAdmin { get; set; } = false;
     }
 }

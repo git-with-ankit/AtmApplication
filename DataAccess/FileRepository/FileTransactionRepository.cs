@@ -87,7 +87,7 @@ namespace DataAccess.FileRepository
                 UserName = values[0],
                 Type = Enum.Parse<TransactionType>(values[1]),
                 Amount = double.Parse(values[2]),
-                TimeStamp = DateTime.Parse(values[3]).ToLocalTime(),
+                TimeStamp = DateTime.Parse(values[3]),
                 NewBalance = double.Parse(values[4]),
                 IsAdminTransaction = bool.Parse(values[5])
             };
@@ -96,8 +96,8 @@ namespace DataAccess.FileRepository
         {
             var lines = transactionRecords
                 .Select(record => $"{record.UserName},{record.Type}," +
-                                 $"{record.Amount:0.00},{record.TimeStamp}," +
-                                 $"{record.NewBalance:0.00},{record.IsAdminTransaction}")
+                                 $"{record.Amount:F2},{record.TimeStamp}," +
+                                 $"{record.NewBalance:F2},{record.IsAdminTransaction}")
                 .ToArray();
             await WriteAllLinesAsync(lines);
         }

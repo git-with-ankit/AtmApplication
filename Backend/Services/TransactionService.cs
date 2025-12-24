@@ -1,3 +1,4 @@
+using Backend.ApplicationConstants;
 using Backend.DTOs;
 
 using Backend.Exceptions;
@@ -23,10 +24,10 @@ namespace Backend.Services
             IRepository<AtmDetails> atmRepository,
             IRepository<TransactionDetails> transactionRepository)
         {
-            _validationService = validationService;
-            _accountRepository = accountRepository;
-            _atmRepository = atmRepository;
-            _transactionRepository = transactionRepository;
+            _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
+            _accountRepository = accountRepository ?? throw new ArgumentNullException(nameof(accountRepository));
+            _atmRepository = atmRepository ?? throw new ArgumentNullException(nameof(atmRepository));
+            _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         }
 
         public async Task<TransactionResponseDto> DepositAsync(TransactionDto transactionDto)
@@ -54,7 +55,7 @@ namespace Backend.Services
             {
                 UserName = transactionDto.Username,
                 Type = transactionDto.Type,
-                Amount = (double)transactionDto.Amount,
+                Amount = transactionDto.Amount,
                 TimeStamp = DateTime.UtcNow,
                 NewBalance = account.Balance,
                 IsAdminTransaction = false
@@ -81,16 +82,21 @@ namespace Backend.Services
             }
 
             // Check user balance
-            if (account.Balance < (double)transactionDto.Amount)
+            if (account.Balance < transactionDto.Amount)
             {
                 throw new InsufficientFundsException();
             }
 
             // Check ATM balance
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails == null || atmDetails.TotalBalance < transactionDto.Amount)
+            if (atmDetails == null)
             {
-                throw new InsufficientFundsException();
+                throw new InvalidOperationException("ATM details not found.");
+            }
+            
+            if (atmDetails.TotalBalance < transactionDto.Amount)
+            {
+                throw new InvalidOperationException("ATM does not have sufficient cash. Please try a smaller amount.");
             }
 
             // Update user balance
@@ -126,23 +132,45 @@ namespace Backend.Services
 
         public async Task<TransactionsHistoryDto> GetTransactionHistoryAsync(string username, int count)
         {
+            // Check if user is admin by comparing with ATM's current admin
+            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
+            bool isAdmin = atmDetails != null && atmDetails.AdminUsername.Equals(username);
+
             var allTransactions = await _transactionRepository.GetAllDataAsync();
-            var userTransactions = allTransactions
-                .Where(t => t.UserName.Equals(username))
-                .OrderByDescending(t => t.TimeStamp)
-                .Take(count)
+            
+            IEnumerable<TransactionDetails> filteredTransactions;
+            
+            if (isAdmin)
+            {
+                // Admin sees ALL transactions from ALL users
+                filteredTransactions = allTransactions
+                    .OrderByDescending(t => t.TimeStamp)
+                    .Take(count);
+            }
+            else
+            {
+                // Regular user sees only their own transactions
+                filteredTransactions = allTransactions
+                    .Where(t => t.UserName.Equals(username))
+                    .OrderByDescending(t => t.TimeStamp)
+                    .Take(count);
+            }
+
+            var transactionList = filteredTransactions
                 .Select(t => new TransactionHistoryItemDto
                 {
+                    Username = t.UserName,
                     Type = t.Type,
                     Amount = t.Amount,
                     NewBalance = t.NewBalance,
-                    Timestamp = t.TimeStamp
+                    Timestamp = t.TimeStamp,
+                    IsAdminTransaction = t.IsAdminTransaction
                 })
                 .ToList();
 
             return new TransactionsHistoryDto
             {
-                Transactions = userTransactions
+                Transactions = transactionList
             };
         }
 
