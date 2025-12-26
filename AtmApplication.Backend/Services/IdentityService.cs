@@ -169,34 +169,28 @@ namespace AtmApplication.Backend.Services
             return true;
         }
 
-        public async Task<UserListDto> GetFrozenAccountsAsync(string adminUsername)
+        public async Task<FrozenAccountsListDto> GetFrozenAccountsAsync(string adminUsername)
         {
             await _validationService.ValidateAdminAsync(adminUsername);
 
             var allUsers = await _userRepository.GetAllDataAsync();
             var frozenUsers = allUsers.Where(u => u.IsFreezed).ToList();
-            if (frozenUsers.Any())
-            {
-                var firstFrozen = frozenUsers.First();//return the list of frozen users
-                var account = await _accountRepository.GetDataByUsernameAsync(firstFrozen.Username);
+            
+            var frozenAccountsList = new List<FrozenAccountDto>();
 
-                return new UserListDto
+            foreach (var frozenUser in frozenUsers)
+            {
+                var account = await _accountRepository.GetDataByUsernameAsync(frozenUser.Username);
+                frozenAccountsList.Add(new FrozenAccountDto
                 {
-                    Username = firstFrozen.Username,
-                    IsAdmin = firstFrozen.IsAdmin,
-                    IsLoginSuccessful = !firstFrozen.IsFreezed,
-                    IsFrozen = firstFrozen.IsFreezed,
+                    Username = frozenUser.Username,
                     Balance = account != null ? account.Balance : 0
-                };
+                });
             }
 
-            return new UserListDto
+            return new FrozenAccountsListDto
             {
-                Username = string.Empty,
-                IsAdmin = false,
-                IsLoginSuccessful = false,
-                IsFrozen = false,
-                Balance = 0
+                FrozenAccounts = frozenAccountsList
             };
         }
 

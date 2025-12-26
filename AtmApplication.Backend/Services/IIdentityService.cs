@@ -11,7 +11,7 @@ namespace AtmApplication.Backend.Services
         Task<bool> ChangePinAsync(PinChangeDto pinChangeDto);
         Task<bool> FreezeAccountAsync(string username);
         Task<bool> UnfreezeAccountAsync(UnfreezeUserDto dto);
-        Task<UserListDto> GetFrozenAccountsAsync(string adminUsername);
+        Task<FrozenAccountsListDto> GetFrozenAccountsAsync(string adminUsername);
         Task<bool> ChangeAdminAsync(ChangeAdminDto dto);
     }
 }

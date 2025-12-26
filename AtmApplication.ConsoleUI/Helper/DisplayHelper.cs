@@ -70,18 +70,24 @@ namespace AtmApplication.ConsoleUI.Helper
             Console.WriteLine($"\nATM Total Balance: ${balance:F2}");
         }
 
-        public static void DisplayFrozenAccounts(UserListDto user)
+        public static void DisplayFrozenAccounts(FrozenAccountsListDto frozenAccountsList)
         {
-            if (string.IsNullOrEmpty(user.Username))
+            Console.WriteLine("\n--- Frozen Accounts ---");
+            
+            if (frozenAccountsList.FrozenAccounts.Count == 0)
             {
-                DisplayInfo("No frozen accounts found.");
+                Console.WriteLine("No frozen accounts found.");
                 return;
             }
 
-            Console.WriteLine("\n--- Frozen Accounts ---");
-            Console.WriteLine($"Username: {user.Username}");
-            Console.WriteLine($"Balance: ${user.Balance:F2}");
-            Console.WriteLine($"Frozen: {user.IsFrozen}");
+            Console.WriteLine($"Total Frozen Accounts: {frozenAccountsList.FrozenAccounts.Count}\n");
+            
+            foreach (var account in frozenAccountsList.FrozenAccounts)
+            {
+                Console.WriteLine($"Username: {account.Username}");
+                Console.WriteLine($"Balance: ${account.Balance:F2}");
+                Console.WriteLine(new string('-', 40));
+            }
         }
     }
 }
