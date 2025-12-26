@@ -166,11 +166,9 @@ namespace AtmApplication.ConsoleUI.Menus
             {
                 double amount = InputHelper.GetAmountInput();
 
-                // Verify PIN before transaction
-                if (!await VerifyPinWithAttemptsAsync(userPin, username))
-                {
-                    return false;
-                }
+                // Prompt for PIN verification
+                DisplayHelper.DisplayMessage("\nPlease enter your PIN to confirm:");
+                int enteredPin = InputHelper.GetPinInput();
 
                 var transactionDto = new TransactionDto
                 {
@@ -179,11 +177,24 @@ namespace AtmApplication.ConsoleUI.Menus
                     Amount = amount
                 };
 
-                var result = await _transactionService.DepositAsync(transactionDto);
+                var result = await _transactionService.DepositAsync(transactionDto, enteredPin);
                 DisplayHelper.DisplaySuccess(string.Format(UIMessages.DepositSuccess, amount.ToString("F2")));
                 DisplayHelper.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
                 
                 return true;
+            }
+            catch (AccountFrozenException)
+            {
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
+            }
+            catch (ExceededPinAttemptsException)
+            {
+                DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
             }
             catch (Exception ex)
             {
@@ -198,11 +209,9 @@ namespace AtmApplication.ConsoleUI.Menus
             {
                 double amount = InputHelper.GetAmountInput();
 
-                // Verify PIN before transaction
-                if (!await VerifyPinWithAttemptsAsync(userPin, username))
-                {
-                    return false;
-                }
+                // Prompt for PIN verification
+                DisplayHelper.DisplayMessage("\nPlease enter your PIN to confirm:");
+                int enteredPin = InputHelper.GetPinInput();
 
                 var transactionDto = new TransactionDto
                 {
@@ -211,11 +220,24 @@ namespace AtmApplication.ConsoleUI.Menus
                     Amount = amount
                 };
 
-                var result = await _transactionService.WithdrawAsync(transactionDto);
+                var result = await _transactionService.WithdrawAsync(transactionDto, enteredPin);
                 DisplayHelper.DisplaySuccess(string.Format(UIMessages.WithdrawSuccess, amount.ToString("F2")));
                 DisplayHelper.DisplayInfo($"New Balance: ${result.NewBalance:F2}");
                 
                 return true;
+            }
+            catch (AccountFrozenException)
+            {
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
+            }
+            catch (ExceededPinAttemptsException)
+            {
+                DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
             }
             catch (InsufficientFundsException ex)
             {
@@ -233,17 +255,27 @@ namespace AtmApplication.ConsoleUI.Menus
         {
             try
             {
-                // Verify PIN before showing balance
-                if (!await VerifyPinWithAttemptsAsync(userPin, username))
-                {
-                    return false;
-                }
+                // Prompt for PIN verification
+                DisplayHelper.DisplayMessage("\nPlease enter your PIN to view balance:");
+                int enteredPin = InputHelper.GetPinInput();
 
-
-                var balanceDto = await _transactionService.GetBalanceAsync(username);
+                var balanceDto = await _transactionService.GetBalanceAsync(username, enteredPin);
                 DisplayHelper.DisplayBalance(balanceDto.Balance);
                 
                 return true;
+            }
+            catch (AccountFrozenException)
+            {
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
+            }
+            catch (ExceededPinAttemptsException)
+            {
+                DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
+                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
+                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
+                return false; // Sign out user
             }
             catch (Exception ex)
             {
@@ -307,45 +339,6 @@ namespace AtmApplication.ConsoleUI.Menus
             catch (Exception ex)
             {
                 DisplayHelper.DisplayError($"Failed to retrieve transactions: {ex.Message}");
-            }
-        }
-
-        private async Task<bool> VerifyPinWithAttemptsAsync(int correctPin, string username)
-        {
-            int attempts = Constants.MaxPinAttempts;
-
-            while (attempts > 0)
-            {
-                int enteredPin = InputHelper.GetPinInput();
-
-                if (enteredPin == correctPin)
-                {
-                    return true;
-                }
-
-                attempts--;
-                if (attempts > 0)
-                {
-                    DisplayHelper.DisplayError(string.Format(UIMessages.PinMismatch, attempts));
-                }
-            }
-
-            DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
-            await HandleFreezeAccountAsync(username);
-            return false;
-        }
-
-        private async Task HandleFreezeAccountAsync(string username)
-        {
-            try
-            {
-                await _identityService.FreezeAccountAsync(username);
-                DisplayHelper.DisplayError(UIMessages.AccountFrozen);
-                DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-            }
-            catch (Exception ex)
-            {
-                DisplayHelper.DisplayError($"Error: {ex.Message}");
             }
         }
     }

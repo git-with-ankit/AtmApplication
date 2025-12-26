@@ -45,34 +45,23 @@ namespace AtmApplication.Backend.Services
                 };
             }
 
-            if (user.IsFreezed)
-            {
-                throw new AccountFrozenException();
-            }
-            if (user.Pin != loginDto.Pin)
-            {
-                user.FailedLoginAttempts++;
-                await _userRepository.UpdateDataAsync(user);
+            // Check if account is frozen first
+            await _validationService.ValidateAccountNotFrozenAsync(loginDto.Username);
 
-                if (user.FailedLoginAttempts >= Constants.MaxPinAttempts)
-                {
-                    user.IsFreezed = true;
-                    await _userRepository.UpdateDataAsync(user);
-                    throw new ExceededPinAttemptsException();
-                }
+            // Verify PIN with attempts tracking
+            var verificationResult = await _validationService.VerifyPinWithAttemptsAsync(loginDto.Username, loginDto.Pin);
 
+            if (!verificationResult.IsVerified)
+            {
                 return new LoginResponseDto
                 {
                     Username = string.Empty,
                     IsAdmin = false,
                     IsLoginSuccessful = false,
                     IsFrozen = false,
-                    Message = $"Invalid PIN. {Constants.MaxPinAttempts - user.FailedLoginAttempts} attempts remaining."
+                    Message = verificationResult.Message
                 };
             }
-
-            user.FailedLoginAttempts = 0;
-            await _userRepository.UpdateDataAsync(user);
 
             return new LoginResponseDto
             {

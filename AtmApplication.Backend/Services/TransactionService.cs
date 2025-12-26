@@ -30,8 +30,18 @@ namespace AtmApplication.Backend.Services
             _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         }
 
-        public async Task<TransactionResponseDto> DepositAsync(TransactionDto transactionDto)
+        public async Task<TransactionResponseDto> DepositAsync(TransactionDto transactionDto, int pin)
         {
+            // Validate account is not frozen
+            await _validationService.ValidateAccountNotFrozenAsync(transactionDto.Username);
+
+            // Verify PIN
+            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(transactionDto.Username, pin);
+            if (!pinVerification.IsVerified)
+            {
+                throw new InvalidCredentialsException();
+            }
+
             var account = await _accountRepository.GetDataByUsernameAsync(transactionDto.Username);
             if (account == null)
             {
@@ -73,8 +83,18 @@ namespace AtmApplication.Backend.Services
             };
         }
 
-        public async Task<TransactionResponseDto> WithdrawAsync(TransactionDto transactionDto)
+        public async Task<TransactionResponseDto> WithdrawAsync(TransactionDto transactionDto, int pin)
         {
+            // Validate account is not frozen
+            await _validationService.ValidateAccountNotFrozenAsync(transactionDto.Username);
+
+            // Verify PIN
+            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(transactionDto.Username, pin);
+            if (!pinVerification.IsVerified)
+            {
+                throw new InvalidCredentialsException();
+            }
+
             var account = await _accountRepository.GetDataByUsernameAsync(transactionDto.Username);
             if (account == null)
             {
@@ -174,8 +194,18 @@ namespace AtmApplication.Backend.Services
             };
         }
 
-        public async Task<BalanceDto> GetBalanceAsync(string username)
+        public async Task<BalanceDto> GetBalanceAsync(string username, int pin)
         {
+            // Validate account is not frozen
+            await _validationService.ValidateAccountNotFrozenAsync(username);
+
+            // Verify PIN
+            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(username, pin);
+            if (!pinVerification.IsVerified)
+            {
+                throw new InvalidCredentialsException();
+            }
+
             var account = await _accountRepository.GetDataByUsernameAsync(username);
             if (account == null)
             {
