@@ -165,8 +165,6 @@ namespace AtmApplication.ConsoleUI.Menus
             try
             {
                 double amount = InputHelper.GetAmountInput();
-
-                // Prompt for PIN verification
                 DisplayHelper.DisplayMessage("\nPlease enter your PIN to confirm:");
                 int enteredPin = InputHelper.GetPinInput();
 
@@ -187,14 +185,14 @@ namespace AtmApplication.ConsoleUI.Menus
             {
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (ExceededPinAttemptsException)
             {
                 DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (Exception ex)
             {
@@ -208,8 +206,6 @@ namespace AtmApplication.ConsoleUI.Menus
             try
             {
                 double amount = InputHelper.GetAmountInput();
-
-                // Prompt for PIN verification
                 DisplayHelper.DisplayMessage("\nPlease enter your PIN to confirm:");
                 int enteredPin = InputHelper.GetPinInput();
 
@@ -230,14 +226,14 @@ namespace AtmApplication.ConsoleUI.Menus
             {
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (ExceededPinAttemptsException)
             {
                 DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (InsufficientFundsException ex)
             {
@@ -255,7 +251,6 @@ namespace AtmApplication.ConsoleUI.Menus
         {
             try
             {
-                // Prompt for PIN verification
                 DisplayHelper.DisplayMessage("\nPlease enter your PIN to view balance:");
                 int enteredPin = InputHelper.GetPinInput();
 
@@ -268,14 +263,14 @@ namespace AtmApplication.ConsoleUI.Menus
             {
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (ExceededPinAttemptsException)
             {
                 DisplayHelper.DisplayError(UIMessages.PinAttemptsExceeded);
                 DisplayHelper.DisplayError(UIMessages.AccountFrozen);
                 DisplayHelper.DisplayMessage(UIMessages.ContactAdmin);
-                return false; // Sign out user
+                return false; 
             }
             catch (Exception ex)
             {
@@ -308,17 +303,20 @@ namespace AtmApplication.ConsoleUI.Menus
                     NewPin = newPin
                 };
 
-                bool success = await _identityService.ChangePinAsync(pinChangeDto);
+                await _identityService.ChangePinAsync(pinChangeDto);
                 
-                if (success)
-                {
-                    DisplayHelper.DisplaySuccess(UIMessages.PinChangeSuccess);
-                }
-                else
-                {
-                    DisplayHelper.DisplayError("PIN change failed.");
-                }
+                DisplayHelper.DisplaySuccess(UIMessages.PinChangeSuccess);
                 
+                return true;
+            }
+            catch (UserNotFoundException)
+            {
+                DisplayHelper.DisplayError("User not found. Please contact administrator.");
+                return true;
+            }
+            catch (InvalidCredentialsException)
+            {
+                DisplayHelper.DisplayError("Current PIN is incorrect. Please try again.");
                 return true;
             }
             catch (Exception ex)

@@ -27,9 +27,6 @@ namespace AtmApplication.DataAccess.FileRepository
         public async Task UpdateDataAsync(AtmDetails atmDetails)
         {
             var atmRecords = await GetAllDataAsync();
-            
-            // Since there's typically only one ATM record, update the first one
-            // Don't compare by AdminUsername as it may have changed
             if (atmRecords.Any())
             {
                 var updatedRecords = new List<AtmDetails> { atmDetails };

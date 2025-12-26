@@ -30,7 +30,7 @@ namespace AtmApplication.Backend.Services
             }
         }
 
-        public async Task ValidateAccountExistsAsync(string username)
+        public async Task<AccountDetails> ValidateAccountExistsAsync(string username)
         {
             var account = await _accountRepository.GetDataByUsernameAsync(username);
             if (account == null)
@@ -38,9 +38,10 @@ namespace AtmApplication.Backend.Services
                 throw new InvalidOperationException(
                     string.Format(ExceptionMessages.AccountNotFound, username));
             }
+            return account;
         }
 
-        public async Task ValidateUserExistsAsync(string username)
+        public async Task<UserDetails> ValidateUserExistsAsync(string username)
         {
             var user = await _userRepository.GetDataByUsernameAsync(username);
             if (user == null)
@@ -48,6 +49,7 @@ namespace AtmApplication.Backend.Services
                 throw new InvalidOperationException(
                     string.Format(ExceptionMessages.UserNotFound, username));
             }
+            return user;
         }
 
         public bool ValidateUsernameFormat(string username)
@@ -78,8 +80,6 @@ namespace AtmApplication.Backend.Services
                 throw new InvalidOperationException(
                     string.Format(ExceptionMessages.UserNotFound, username));
             }
-
-            // Verify PIN
             if (user.Pin != pin)
             {
                 user.FailedLoginAttempts++;
@@ -102,8 +102,6 @@ namespace AtmApplication.Backend.Services
                     Message = $"Invalid PIN. {Constants.MaxPinAttempts - user.FailedLoginAttempts} attempts remaining."
                 };
             }
-
-            // PIN is correct - reset failed attempts
             user.FailedLoginAttempts = 0;
             await _userRepository.UpdateDataAsync(user);
 
@@ -114,6 +112,26 @@ namespace AtmApplication.Backend.Services
                 IsAccountFrozen = false,
                 Message = "PIN verified successfully."
             };
+        }
+
+        public async Task ValidateUserAndPinAsync(string username, int pin)
+        {
+            await ValidateUsernameAvailableAsync(username);
+            await ValidateAccountNotFrozenAsync(username);
+            var pinVerification = await VerifyPinWithAttemptsAsync(username, pin);
+            if (!pinVerification.IsVerified)
+            {
+                throw new InvalidCredentialsException();
+            }
+        }
+
+        public async Task ValidateUsernameAvailableAsync(string username)
+        {
+            var existingUser = await _userRepository.GetDataByUsernameAsync(username);
+            if (existingUser != null)
+            {
+                throw new UsernameTakenException();
+            }
         }
     }
 }

@@ -98,7 +98,7 @@ namespace AtmApplication.ConsoleUI.Menus
                         break;
                     case AdminActionOption.ChangeAdmin:
                         await HandleChangeAdminAsync(adminUsername);
-                        return; // Exit after changing admin
+                        return; 
                     case AdminActionOption.Exit:
                         DisplayHelper.DisplayMessage(UIMessages.Exiting);
                         return;

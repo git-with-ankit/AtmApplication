@@ -8,10 +8,12 @@ namespace AtmApplication.Backend.Services
     public interface IValidationService
     {
         Task ValidateAdminAsync(string username);
-        Task ValidateAccountExistsAsync(string username);
-        Task ValidateUserExistsAsync(string username);
+        Task<AccountDetails> ValidateAccountExistsAsync(string username);
+        Task<UserDetails> ValidateUserExistsAsync(string username);
         bool ValidateUsernameFormat(string username);
         Task ValidateAccountNotFrozenAsync(string username);
         Task<PinVerificationResponseDto> VerifyPinWithAttemptsAsync(string username, int pin);
+        Task ValidateUserAndPinAsync(string username, int pin);
+        Task ValidateUsernameAvailableAsync(string username);
     }
 }

@@ -1,7 +1,7 @@
 using AtmApplication.Frontend.Dependencies;
 using System.Threading.Tasks;
 
-namespace AtmApplication.Frontend
+namespace AtmApplication.ConsoleUI
 {
     internal class Program
     {

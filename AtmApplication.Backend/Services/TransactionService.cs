@@ -30,129 +30,108 @@ namespace AtmApplication.Backend.Services
             _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         }
 
-        public async Task<TransactionResponseDto> DepositAsync(TransactionDto transactionDto, int pin)
+        private async Task<AtmDetails> GetAtmDetailsAsync()
         {
-            // Validate account is not frozen
-            await _validationService.ValidateAccountNotFrozenAsync(transactionDto.Username);
-
-            // Verify PIN
-            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(transactionDto.Username, pin);
-            if (!pinVerification.IsVerified)
-            {
-                throw new InvalidCredentialsException();
-            }
-
-            var account = await _accountRepository.GetDataByUsernameAsync(transactionDto.Username);
-            if (account == null)
-            {
-                throw new InvalidOperationException("Account not found.");
-            }
-
-            // Update user balance
-            account.Balance += transactionDto.Amount;
-            await _accountRepository.UpdateDataAsync(account);
-
-            // Update ATM balance
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails != null)
+            if (atmDetails == null)
             {
-                atmDetails.TotalBalance += transactionDto.Amount;
-                await _atmRepository.UpdateDataAsync(atmDetails);
+                throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
             }
+            return atmDetails;
+        }
 
-            // Record transaction
+        private async Task RecordTransactionAsync(
+            string username,
+            TransactionType type,
+            double amount,
+            double newBalance,
+            bool isAdminTransaction)
+        {
             var transaction = new TransactionDetails
             {
-                UserName = transactionDto.Username,
-                Type = transactionDto.Type,
-                Amount = transactionDto.Amount,
+                UserName = username,
+                Type = type,
+                Amount = amount,
                 TimeStamp = DateTime.UtcNow,
-                NewBalance = account.Balance,
-                IsAdminTransaction = false
+                NewBalance = newBalance,
+                IsAdminTransaction = isAdminTransaction
             };
-
             await _transactionRepository.AddDataAsync(transaction);
+        }
 
+        private TransactionResponseDto CreateTransactionResponse(
+            TransactionDto transactionDto,
+            double newBalance,
+            DateTime timestamp)
+        {
             return new TransactionResponseDto
             {
                 Username = transactionDto.Username,
                 Type = transactionDto.Type,
                 Amount = transactionDto.Amount,
-                NewBalance = account.Balance,
-                Timestamp = transaction.TimeStamp
+                NewBalance = newBalance,
+                Timestamp = timestamp
             };
+        }
+
+        public async Task<TransactionResponseDto> DepositAsync(TransactionDto transactionDto, int pin)
+        {
+            await _validationService.ValidateUserAndPinAsync(transactionDto.Username, pin);
+
+            var account = await _validationService.ValidateAccountExistsAsync(transactionDto.Username);
+            account.Balance += transactionDto.Amount;
+            await _accountRepository.UpdateDataAsync(account);
+
+            var atmDetails = await GetAtmDetailsAsync();
+            atmDetails.TotalBalance += transactionDto.Amount;
+            await _atmRepository.UpdateDataAsync(atmDetails);
+
+            var timestamp = DateTime.UtcNow;
+            await RecordTransactionAsync(
+                transactionDto.Username,
+                transactionDto.Type,
+                transactionDto.Amount,
+                account.Balance,
+                isAdminTransaction: false);
+
+            return CreateTransactionResponse(transactionDto, account.Balance, timestamp);
         }
 
         public async Task<TransactionResponseDto> WithdrawAsync(TransactionDto transactionDto, int pin)
         {
-            // Validate account is not frozen
-            await _validationService.ValidateAccountNotFrozenAsync(transactionDto.Username);
+            await _validationService.ValidateUserAndPinAsync(transactionDto.Username, pin);
 
-            // Verify PIN
-            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(transactionDto.Username, pin);
-            if (!pinVerification.IsVerified)
-            {
-                throw new InvalidCredentialsException();
-            }
+            var account = await _validationService.ValidateAccountExistsAsync(transactionDto.Username);
 
-            var account = await _accountRepository.GetDataByUsernameAsync(transactionDto.Username);
-            if (account == null)
-            {
-                throw new InvalidOperationException(ExceptionMessages.AccountNotFound);
-            }
-
-            // Check user balance
             if (account.Balance < transactionDto.Amount)
             {
                 throw new InsufficientFundsException();
             }
-
-            // Check ATM balance
-            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails == null)
-            {
-                throw new InvalidOperationException("ATM details not found.");
-            }
-            
+            var atmDetails = await GetAtmDetailsAsync();
             if (atmDetails.TotalBalance < transactionDto.Amount)
             {
-                throw new InvalidOperationException("ATM does not have sufficient cash. Please try a smaller amount.");
+                throw new InvalidOperationException();
             }
 
-            // Update user balance
             account.Balance -= transactionDto.Amount;
             await _accountRepository.UpdateDataAsync(account);
 
-            // Update ATM balance
             atmDetails.TotalBalance -= transactionDto.Amount;
             await _atmRepository.UpdateDataAsync(atmDetails);
 
-            // Record transaction
-            var transaction = new TransactionDetails
-            {
-                UserName = transactionDto.Username,
-                Type = transactionDto.Type,
-                Amount = transactionDto.Amount,
-                TimeStamp = DateTime.UtcNow,
-                NewBalance = account.Balance,
-                IsAdminTransaction = false
-            };
+            var timestamp = DateTime.UtcNow;
+            await RecordTransactionAsync(
+                transactionDto.Username,
+                transactionDto.Type,
+                transactionDto.Amount,
+                account.Balance,
+                isAdminTransaction: false);
 
-            await _transactionRepository.AddDataAsync(transaction);
-
-            return new TransactionResponseDto
-            {
-                Username = transactionDto.Username,
-                Type = transactionDto.Type,
-                Amount = transactionDto.Amount,
-                NewBalance = account.Balance,
-                Timestamp = transaction.TimeStamp
-            };
+            return CreateTransactionResponse(transactionDto, account.Balance, timestamp);
         }
 
         public async Task<TransactionsHistoryDto> GetTransactionHistoryAsync(string username, int count)
         {
-            // Check if user is admin by comparing with ATM's current admin
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
             bool isAdmin = atmDetails != null && atmDetails.AdminUsername.Equals(username);
 
@@ -162,14 +141,12 @@ namespace AtmApplication.Backend.Services
             
             if (isAdmin)
             {
-                // Admin sees ALL transactions from ALL users
                 filteredTransactions = allTransactions
                     .OrderByDescending(t => t.TimeStamp)
                     .Take(count);
             }
             else
             {
-                // Regular user sees only their own transactions
                 filteredTransactions = allTransactions
                     .Where(t => t.UserName.Equals(username))
                     .OrderByDescending(t => t.TimeStamp)
@@ -196,22 +173,9 @@ namespace AtmApplication.Backend.Services
 
         public async Task<BalanceDto> GetBalanceAsync(string username, int pin)
         {
-            // Validate account is not frozen
-            await _validationService.ValidateAccountNotFrozenAsync(username);
+            await _validationService.ValidateUserAndPinAsync(username, pin);
 
-            // Verify PIN
-            var pinVerification = await _validationService.VerifyPinWithAttemptsAsync(username, pin);
-            if (!pinVerification.IsVerified)
-            {
-                throw new InvalidCredentialsException();
-            }
-
-            var account = await _accountRepository.GetDataByUsernameAsync(username);
-            if (account == null)
-            {
-                throw new InvalidOperationException(
-                    string.Format(ExceptionMessages.AccountNotFound, username));
-            }
+            var account = await _validationService.ValidateAccountExistsAsync(username);
 
             return new BalanceDto
             {
@@ -222,46 +186,32 @@ namespace AtmApplication.Backend.Services
 
         public async Task<AtmBalanceDto> GetAtmBalanceAsync(string adminUsername)
         {
-            // Validate admin
             await _validationService.ValidateAdminAsync(adminUsername);
 
-            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
+            var atmDetails = await GetAtmDetailsAsync();
 
             return new AtmBalanceDto
             {
-                TotalBalance = atmDetails != null ? atmDetails.TotalBalance : 0
+                TotalBalance = atmDetails.TotalBalance
             };
         }
 
         public async Task<bool> DepositToAtmAsync(DepositCashDto dto)
         {
-            // Validate admin
             await _validationService.ValidateAdminAsync(dto.AdminUsername);
 
-            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            
-            if (atmDetails == null)
-            {
-                throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
-            }
+            var atmDetails = await GetAtmDetailsAsync();
 
-            // Update balance and current admin
             atmDetails.TotalBalance += dto.Amount;
             atmDetails.AdminUsername = dto.AdminUsername;
             await _atmRepository.UpdateDataAsync(atmDetails);
 
-            // Record admin transaction
-            var transaction = new TransactionDetails
-            {
-                UserName = dto.AdminUsername,
-                Type = TransactionType.Credit,
-                Amount = dto.Amount,
-                TimeStamp = DateTime.UtcNow,
-                NewBalance = atmDetails.TotalBalance,
-                IsAdminTransaction = true
-            };
-
-            await _transactionRepository.AddDataAsync(transaction);
+            await RecordTransactionAsync(
+                dto.AdminUsername,
+                TransactionType.Credit,
+                dto.Amount,
+                atmDetails.TotalBalance,
+                isAdminTransaction: true);
 
             return true;
         }

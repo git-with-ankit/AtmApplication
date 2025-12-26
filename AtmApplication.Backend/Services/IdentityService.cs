@@ -36,19 +36,9 @@ namespace AtmApplication.Backend.Services
             
             if (user is null)
             {
-                return new LoginResponseDto
-                {
-                    Username = string.Empty,
-                    IsAdmin = false,
-                    IsLoginSuccessful = false,
-                    IsFrozen = false
-                };
+                throw new UserNotFoundException();
             }
-
-            // Check if account is frozen first
             await _validationService.ValidateAccountNotFrozenAsync(loginDto.Username);
-
-            // Verify PIN with attempts tracking
             var verificationResult = await _validationService.VerifyPinWithAttemptsAsync(loginDto.Username, loginDto.Pin);
 
             if (!verificationResult.IsVerified)
@@ -74,11 +64,7 @@ namespace AtmApplication.Backend.Services
          
         public async Task<LoginResponseDto> SignupAsync(SignupDto signupDto)
         {
-            var existingUser = await _userRepository.GetDataByUsernameAsync(signupDto.Username);
-            if (existingUser != null)
-            {
-                throw new UsernameTakenException();
-            }
+            await _validationService.ValidateUsernameAvailableAsync(signupDto.Username);
 
             var newUser = new UserDetails
             {
@@ -109,15 +95,11 @@ namespace AtmApplication.Backend.Services
 
         public async Task<bool> ChangePinAsync(PinChangeDto pinChangeDto)
         {
-            var user = await _userRepository.GetDataByUsernameAsync(pinChangeDto.Username);
-            if (user == null)
-            {
-                return false;
-            }
+            var user = await _validationService.ValidateUserExistsAsync(pinChangeDto.Username);
 
             if (user.Pin != pinChangeDto.CurrentPin)
             {
-                return false;
+                throw new InvalidCredentialsException();
             }
 
             user.Pin = pinChangeDto.NewPin;
@@ -129,13 +111,8 @@ namespace AtmApplication.Backend.Services
 
         public async Task<bool> FreezeAccountAsync(string username)
         {
-            var user = await _userRepository.GetDataByUsernameAsync(username);
-            if (user == null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user = await _validationService.ValidateUserExistsAsync(username);
 
-            // CRITICAL: Never freeze admin accounts - if admin is frozen, application becomes unusable
             if (user.IsAdmin)
             {
                 throw new AdminFreezeException();
@@ -151,11 +128,7 @@ namespace AtmApplication.Backend.Services
         {
             await _validationService.ValidateAdminAsync(dto.AdminUsername);
 
-            var user = await _userRepository.GetDataByUsernameAsync(dto.Username);
-            if (user == null)
-            {
-                throw new UserNotFoundException();
-            }
+            var user = await _validationService.ValidateUserExistsAsync(dto.Username);
 
             if (!user.IsFreezed)
             {
@@ -163,7 +136,7 @@ namespace AtmApplication.Backend.Services
             }
 
             user.IsFreezed = false;
-            user.FailedLoginAttempts = 0; // Reset failed attempts when unfreezing
+            user.FailedLoginAttempts = 0;
             await _userRepository.UpdateDataAsync(user);
 
             return true;
@@ -203,18 +176,8 @@ namespace AtmApplication.Backend.Services
             {
                 return false;
             }
-
-            // Check if new admin username is already taken
-            var existingUser = await _userRepository.GetDataByUsernameAsync(dto.NewAdminUsername);
-            if (existingUser != null)
-            {
-                throw new UsernameTakenException();
-            }
-
-            // Delete old admin user record (admins don't have accounts, so no need to delete from AccountRepository)
+            await _validationService.ValidateUsernameAvailableAsync(dto.NewAdminUsername);
             await _userRepository.DeleteDataByUsernameAsync(dto.CurrentAdminUsername);
-
-            // Create NEW admin user (not promoting existing user)
             var newAdmin = new UserDetails
             {
                 Username = dto.NewAdminUsername,
@@ -225,13 +188,13 @@ namespace AtmApplication.Backend.Services
             };
             await _userRepository.AddDataAsync(newAdmin);
 
-            // Update ATM admin username
             var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails != null)
+            if (atmDetails == null)
             {
-                atmDetails.AdminUsername = dto.NewAdminUsername;
-                await _atmRepository.UpdateDataAsync(atmDetails);
+                throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
             }
+            atmDetails.AdminUsername = dto.NewAdminUsername;
+            await _atmRepository.UpdateDataAsync(atmDetails);
 
             return true;
         }

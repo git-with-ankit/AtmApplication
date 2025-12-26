@@ -43,14 +43,6 @@ namespace AtmApplication.DataAccess.FileRepository
                 .OrderByDescending(t => t.TimeStamp)                        
                 .ToList();
         }
-        //public async Task<List<TransactionDetails>> GetLastTransactionsAsync(int count)
-        //{
-        //    var transactionRecords = await GetAllDataAsync();
-        //    return transactionRecords
-        //        .OrderByDescending(t => t.TimeStamp)
-        //        .Take(count)
-        //        .ToList();
-        //}
         private TransactionDetails ParseTransactionDetails(string record)
         {
             var values = record.Split(',');
