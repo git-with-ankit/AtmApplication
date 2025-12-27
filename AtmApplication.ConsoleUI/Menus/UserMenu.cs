@@ -5,7 +5,7 @@ using AtmApplication.Backend.DTOs;
 using AtmApplication.Backend.Exceptions;
 using AtmApplication.Backend.Services;
 using AtmApplication.DataAccess.Entities;
-using AtmApplication.Frontend.Model;
+using AtmApplication.ConsoleUI.Model;
 using AtmApplication.ConsoleUI.Menus;
 using AtmApplication.ConsoleUI.Helper;
 using AtmApplication.ConsoleUI.ApplicationConstants;

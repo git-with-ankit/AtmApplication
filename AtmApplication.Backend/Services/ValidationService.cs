@@ -1,7 +1,6 @@
 using AtmApplication.Backend.ApplicationConstants;
 using AtmApplication.Backend.DTOs;
 using AtmApplication.Backend.Exceptions;
-using AtmApplication.DataAccess;
 using AtmApplication.DataAccess.Entities;
 using AtmApplication.DataAccess.Interfaces;
 using System.Text.RegularExpressions;
@@ -116,7 +115,7 @@ namespace AtmApplication.Backend.Services
 
         public async Task ValidateUserAndPinAsync(string username, int pin)
         {
-            await ValidateUsernameAvailableAsync(username);
+            await ValidateUserExistsAsync(username);
             await ValidateAccountNotFrozenAsync(username);
             var pinVerification = await VerifyPinWithAttemptsAsync(username, pin);
             if (!pinVerification.IsVerified)

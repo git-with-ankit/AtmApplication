@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AtmApplication.ConsoleUI.ApplicationConstants;
-using AtmApplication.Frontend.Model;
+using AtmApplication.ConsoleUI.Model;
 using AtmApplication.ConsoleUI.Helper;
 
 namespace AtmApplication.ConsoleUI.Menus

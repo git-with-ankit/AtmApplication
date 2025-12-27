@@ -1,13 +1,9 @@
 using AtmApplication.Backend.DTOs;
 using AtmApplication.Backend.ApplicationConstants;
 using AtmApplication.Backend.Exceptions;
-using AtmApplication.DataAccess;
 using AtmApplication.DataAccess.Entities;
 using AtmApplication.DataAccess.Interfaces;    
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace AtmApplication.Backend.Services
 {
@@ -200,3 +196,5 @@ namespace AtmApplication.Backend.Services
         }
     }
 }
+
+

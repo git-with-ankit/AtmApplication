@@ -1,4 +1,3 @@
-using System;
 using AtmApplication.Backend.DTOs;
 using AtmApplication.DataAccess.Entities;
 

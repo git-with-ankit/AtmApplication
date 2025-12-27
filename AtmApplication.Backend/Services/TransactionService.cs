@@ -2,12 +2,8 @@ using AtmApplication.Backend.ApplicationConstants;
 using AtmApplication.Backend.DTOs;
 using AtmApplication.DataAccess.Interfaces;
 using AtmApplication.Backend.Exceptions;
-using AtmApplication.DataAccess;
 using AtmApplication.DataAccess.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace AtmApplication.Backend.Services
 {
@@ -32,12 +28,8 @@ namespace AtmApplication.Backend.Services
 
         private async Task<AtmDetails> GetAtmDetailsAsync()
         {
-            var atmDetails = (await _atmRepository.GetAllDataAsync()).FirstOrDefault();
-            if (atmDetails == null)
-            {
-                throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
-            }
-            return atmDetails;
+            return (await _atmRepository.GetAllDataAsync()).FirstOrDefault()
+                ?? throw new InvalidOperationException(ExceptionMessages.AtmNotFound);
         }
 
         private async Task RecordTransactionAsync(

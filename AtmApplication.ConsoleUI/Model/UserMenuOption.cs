@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AtmApplication.Frontend.Model
+namespace AtmApplication.ConsoleUI.Model
 {
     internal enum UserMenuOption
     {

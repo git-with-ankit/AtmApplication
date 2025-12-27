@@ -6,7 +6,7 @@ using AtmApplication.Backend.Services;
 using AtmApplication.ConsoleUI.ApplicationConstants;
 using AtmApplication.DataAccess.Entities;
 using AtmApplication.ConsoleUI.Helper;
-using AtmApplication.Frontend.Model;
+using AtmApplication.ConsoleUI.Model;
 using AtmApplication.ConsoleUI.Menus;
 
 namespace AtmApplication.ConsoleUI.Menus

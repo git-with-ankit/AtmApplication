@@ -1,5 +1,4 @@
 using AtmApplication.Backend.ApplicationConstants;
-using System;
 
 namespace AtmApplication.Backend.Exceptions
 {

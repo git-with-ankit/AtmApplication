@@ -1,4 +1,3 @@
-using AtmApplication.Backend.ApplicationConstants;
 
 namespace AtmApplication.ConsoleUI.ApplicationConstants
 {

@@ -1,4 +1,4 @@
-namespace AtmApplication.Frontend.Model
+namespace AtmApplication.ConsoleUI.Model
 {
     internal enum UserActionOption
     {

@@ -1,4 +1,4 @@
-using AtmApplication.Frontend.Dependencies;
+using AtmApplication.ConsoleUI.Dependencies;
 using System.Threading.Tasks;
 
 namespace AtmApplication.ConsoleUI
@@ -11,12 +11,4 @@ namespace AtmApplication.ConsoleUI
             await app.MainMenu.RunAsync();
         }
     }
-}//atm interface separate 
-//backend code review
-//ui exception handling
-//access modifiers
-//comments
-//factory service
-//input doing validation
-//dto change , input validation change
-//freeze bug
+}

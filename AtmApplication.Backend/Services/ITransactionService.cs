@@ -1,7 +1,5 @@
 using AtmApplication.Backend.DTOs;
 
-using System.Threading.Tasks;
-
 namespace AtmApplication.Backend.Services
 {
     public interface ITransactionService

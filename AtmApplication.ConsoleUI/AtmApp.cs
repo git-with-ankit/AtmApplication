@@ -1,9 +1,8 @@
 using AtmApplication.Backend.Services;
-using AtmApplication.DataAccess.Entities;
 using AtmApplication.DataAccess.FileRepository;
 using AtmApplication.DataAccess.Interfaces;
 using AtmApplication.ConsoleUI.Menus;
-namespace AtmApplication.Frontend.Dependencies
+namespace AtmApplication.ConsoleUI.Dependencies
 {
     internal sealed class AtmApp
     {
